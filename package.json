@@ -1,0 +1,21 @@
+{
+  "name": "mahjong",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jay8park/mahjong.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jay8park/mahjong/issues"
+  },
+  "homepage": "https://github.com/jay8park/mahjong#readme"
+}
