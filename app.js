@@ -8,3 +8,23 @@ app.get('/', function(req, res) {
 app.use('/client', express.static(__dirname + '/client'));
 
 serv.listen(2000);
+console.log("Server started.");
+var play_id = 0;
+
+var io = require('socket.io')(serv,{});
+io.sockets.on('connection', function(socket){
+  play_id++;  
+  socket.emit('serverMsg',{
+    id: play_id,
+	});
+
+	socket.on('happy',function(data){
+		console.log('happy because ' + data.reason);
+	});
+ 
+	
+ 
+});
+ 
+ 
+ 
