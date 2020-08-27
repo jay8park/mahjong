@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <form id="userForm">
     <input id="user" type="text">
 </form>
@@ -18,7 +19,8 @@
         var value = document.getElementById("user").value;
 		socket.emit('name',{
 			name: value
-		});
+        });
+        window.location.href = "/waiting";
     }
 </script>
 
