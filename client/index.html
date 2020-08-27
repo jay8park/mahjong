@@ -1,21 +1,22 @@
+<!DOCTYPE html>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
 <script>
     var socket = io();
     var myID = null;
     socket.on('serverMsg',function(data){
         myID = data.id;
-        console.log(data.msg + data.id);	
-        
-	}); 
+        console.log(data.id);
+
+	});
 	var happy = function(){
 		socket.emit('happy',{
 			reason:'its my birthday' + myID
 		});
 	}
- 
-	
- 
- 
+
+
+
+
 </script>
- 
+
 <button onclick="happy()">Happy</button>
