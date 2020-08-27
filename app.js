@@ -18,8 +18,8 @@ io.sockets.on('connection', function(socket){
     id: play_id,
 	});
 
-	socket.on('happy',function(data){
-		console.log('happy because ' + data.reason);
+	socket.on('name',function(data){
+		console.log(data.name);
 	});
  
 	
