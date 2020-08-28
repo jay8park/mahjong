@@ -1,1 +1,12 @@
+<html>
 welcome to the waiting room
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+<script>
+  const socket = io();
+  var myID = null;
+  socket.on('serverMsg', function(data){
+    myID = data.id;
+    console.log(data.id);
+  });
+  </script>
+</html>

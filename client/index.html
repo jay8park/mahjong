@@ -1,27 +1,67 @@
 <!DOCTYPE html>
-<form id="userForm">
-    <input id="user" type="text">
-</form>
+<html>
+  <head>
+    <title>mahjong</title>
+  </head>
+  <body>
+    <h2>mahjong</h2>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
-<script>
-    var socket = io();
-    var myID = null;
-    socket.on('serverMsg',function(data){
-        myID = data.id;
-        console.log(data.id);	
-        
-    }); 
-    var login = document.getElementById("userForm");
-    login.onsubmit = function(e){
-        e.preventDefault();
-        console.log("submitted");
-        var value = document.getElementById("user").value;
-		socket.emit('name',{
-			name: value
+    <form id="userForm">
+        <input id="user" type="text">
+    </form>
+    <br><br>
+    <form id="form" method="post">
+      <label for="name">name:</label>
+      <input type="text" id="name" name="name" required><br><br>
+      <input type="text" id="croom" name="croom">
+      <input type="button" id="create" name="create" onclick="createGame()" value="create game"><br><br>
+      <input type="text" id="jroom" name="jroom">
+      <input type="button" id="join" name="join" onClick="joinGame()" value="join game"><br><br>
+    </form>
+  </body>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+  <script>
+      var socket = io();
+      var myID = null;
+      socket.on('serverMsg',function(data){
+          myID = data.id;
+          console.log(data.id);
+
+      });
+      var login = document.getElementById("userForm");
+      login.onsubmit = function(e){
+          e.preventDefault();
+          console.log("submitted");
+          var value = document.getElementById("user").value;
+  		socket.emit('name',{
+  			name: value
+          });
+          window.location.href = "/waiting";
+      }
+
+      function createGame() {
+        console.log("create");
+        var roomName = document.getElementById("croom").value;
+        var value = document.getElementById("name").value;
+        socket.emit('create', {
+          roomName: roomName,
+          name: value
         });
-        window.location.href = "/waiting";
-    }
-</script>
+        // window.location.href = "game?code=" + roomName + "&name="+ value;
+      }
 
+      socket.on('room created', function(data){
+        window.location.href = "game?code=" + data.room.id + "&name="+ data.name;
+      })
 
+      function joinGame() {
+          var roomName = document.getElementById("jroom").value;
+          var value = document.getElementById("name").value;
+          socket.emit('join', {
+            roomName: roomName,
+            name: value
+          });
+      }
+  </script>
+</html>
