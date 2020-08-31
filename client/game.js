@@ -39,7 +39,7 @@ start.onclick = function(){
             document.getElementById('game').style.display = "block";
         }
         else{
-            console.log("error: cant start without 4.");        
+            console.log("error: cant start without 4.");
         }
     });
 }
@@ -51,6 +51,16 @@ socket.on('start', function(data){
         document.getElementById('game').style.display = "block";
     }
     else{
-        console.log("error: cant start without 4.");        
+        console.log("error: cant start without 4.");
     }
 });
+
+var leave = document.getElementById('leave');
+leave.onclick = function() {
+  console.log("leave");
+  socket.emit('leave', {
+    room: Room,
+    name: Name
+  });
+  window.location.href = "/";
+}
