@@ -1,0 +1,28 @@
+*{
+    font-family: 'Abel';
+}
+h1 {
+    margin-left: 50px;
+}
+
+.rules{
+    margin-left: 30px;
+}
+.row{
+    margin-top: 30px;
+}
+.ins{
+    width: 50%;
+    box-shadow: 5px 5px;
+}
+
+#form{
+    margin-left: 25%;
+    margin-top: 20px;
+}
+#new{
+    margin-left:5px;
+}
+#join{
+    margin-left: 15px;
+}
