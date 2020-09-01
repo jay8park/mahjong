@@ -36,6 +36,19 @@ start.onclick = function(){
         if(data.message){
             document.getElementById('waiting').style.display = "none";
             document.getElementById('game').style.display = "block";
+            // deal the cards to everyone (13 tiles for everybody)
+            socket.emit('deal', {
+              room: Room
+            });
+            socket.emit('active true', {
+              pID: socket.id
+            });
+            // first player starts, and draws and extra tile.
+            socket.emit('draw', {
+              pID: socket.id,
+              name: Name,
+              room: Room
+            });
         }
         else{
             console.log("error: cant start without 4.");
@@ -53,6 +66,11 @@ socket.on('start', function(data){
         console.log("error: cant start without 4.");
     }
 });
+
+socket.on('player tiles', function(data){
+  console.log("player tiles");
+  console.log(data.tiles);
+})
 
 var leave = document.getElementById('leave');
 leave.onclick = function() {

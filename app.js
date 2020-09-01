@@ -1,8 +1,16 @@
+// ----------------------------------------------------------------------------
+// SERVER SET UP
+// ----------------------------------------------------------------------------
 var express = require('express');
 var app = express();
 var serv = require('http').Server(app);
 var path = require('path');
+serv.listen(2000);
+var io = require('socket.io').listen(serv);
 
+// ----------------------------------------------------------------------------
+// URLS
+// ----------------------------------------------------------------------------
 app.get('/', function(req, res) {
   res.sendFile(__dirname + '/client/join.html');
 });
@@ -16,33 +24,88 @@ app.get('/game', function(req, res){
 });
 app.use('/client', express.static(__dirname + '/client'));
 
-serv.listen(2000);
 console.log("Server started.");
 
+// ----------------------------------------------------------------------------
+// GAME SET UP
+// ----------------------------------------------------------------------------
 var PLAYERS = {};
 var ROOMS = {};
 var playID = 0;
-var io = require('socket.io').listen(serv);
-io.sockets.on('connection', function(socket){
+var availableTiles = {
+  "s1" : 4,
+  "s2" : 4,
+  "s3" : 4,
+  "s4" : 4,
+  "s5" : 4,
+  "s6" : 4,
+  "s7" : 4,
+  "s8" : 4,
+  "s9" : 4,
 
+  "c1" : 4,
+  "c2" : 4,
+  "c3" : 4,
+  "c4" : 4,
+  "c5" : 4,
+  "c6" : 4,
+  "c7" : 4,
+  "c8" : 4,
+  "c9" : 4,
+
+  "b1" : 4,
+  "b2" : 4,
+  "b3" : 4,
+  "b4" : 4,
+  "b5" : 4,
+  "b6" : 4,
+  "b7" : 4,
+  "b8" : 4,
+  "b9" : 4,
+
+  "north" : 4,
+  "east" : 4,
+  "south" : 4,
+  "west" : 4,
+  "money" : 4,
+  "blank" : 4,
+  "center" : 4,
+};
+var tiles = ["s1", "s1", "s1", "s1", "s2", "s2", "s2", "s2", "s3", "s3", "s3", "s3", "s4", "s4", "s4", "s4", "s5", "s5", "s5", "s5", "s6", "s6", "s6", "s6", "s7", "s7", "s7", "s7", "s8", "s8", "s8", "s8", "s9", "s9", "s9", "s9", "c1", "c1", "c1", "c1", "c2", "c2", "c2", "c2", "c3", "c3", "c3", "c3", "c4", "c4", "c4", "c4", "c5", "c5", "c5", "c5", "c6", "c6", "c6", "c6", "c7", "c7", "c7", "c7", "c8", "c8", "c8", "c8", "c9", "c9", "c9", "c9", "b1", "b1", "b1", "b1", "b2", "b2", "b2", "b2", "b3", "b3", "b3", "b3", "b4", "b4", "b4", "b4", "b5", "b5", "b5", "b5", "b6", "b6", "b6", "b6", "b7", "b7", "b7", "b7", "b8", "b8", "b8", "b8", "b9", "b9", "b9", "b9", "north", "north", "north", "north", "east", "east", "east", "east", "south", "south", "south", "south", "west", "west", "west", "west", "money", "money", "money", "money", "blank", "blank", "blank", "blank", "center", "center", "center", "center"];
+
+// ----------------------------------------------------------------------------
+// GAME STATUSES
+// ----------------------------------------------------------------------------
+io.sockets.on('connection', function(socket){
+  /**
+    * @desc creates a new room if the room does not already exist
+    * @param data = {code} - code is the room password/code
+  */
   socket.on('createRoom', function(data){
-    //data = {code: }
-    //check for existing Room, make new Room
     console.log("requested to make room: " + data.code);
     var madeRoom = false;
+
     if(!ROOMS[data.code]){
       var Room = {};
       Room.id = data.code;
       Room.players = [];
-      ROOMS[data.code] = Room; //add room to list
-      madeRoom = true; //made room
+      Room.tiles = shuffle(tiles);
+      Room.discard = [];
+      Room.last = "";
+
+      ROOMS[data.code] = Room;  //add room to list
+      madeRoom = true;  //made room
     }
-    socket.emit('roomCreated', {message:madeRoom});
-    //notify client to redirect or display error
+
+    socket.emit('roomCreated', {message:madeRoom});   //notify client to redirect or display error
   });
+
+  /**
+    * @desc players can join an existing room
+    * also checks for existing name, if the room is full, and other error checks
+    * @param data = {room}, {name} - room name and player name
+  */
   socket.on('joinRoom', function(data){
-    //data = {room: __ ; name: ___; }
-    //check for existing Rooms, check Room for Players
     console.log("requested to join room: "+data.room);
     var mess = "";
     if(!ROOMS[data.room]){
@@ -57,27 +120,37 @@ io.sockets.on('connection', function(socket){
     else{
       mess = "good";
     }
-    socket.emit('joined', { message: mess });
-    //notify client to redirect or display error
+
+    socket.emit('joined', { message: mess });   //notify client to redirect or display error
   });
+
+  /**
+    * @desc creates a Player object
+    * @param data = {room}, {name} - room name and player name
+  */
   socket.on('newJoin', function(data){
-    //data = {room: __ ; name: ___; }
-    //create player
     console.log("this is the socket id: " + socket.id);
-    //playID++;
-    //socket.id = playID;
+
     var Player = {};
     Player.id = socket.id;
     Player.name = data.name;
+    Player.tiles = [];
+    Player.revealed = [];
+    Player.active = false;
+
     PLAYERS[Player.id] = Player;
-    //add Player and socket to room
-    ROOMS[data.room].players.push(Player);
+    ROOMS[data.room].players.push(Player);  //add Player and socket to room
+
     socket.join(data.room, function(){
       io.to(data.room).emit('newPlay', { players: ROOMS[data.room].players });
-    }); //data.room
-
-    //notify the room
+    });   //notify the room
   });
+
+  /**
+    * @desc players can join an existing room
+    * also checks for existing name, if the room is full, and other error checks
+    * @param data = {room}, {name} - room name and player name
+  */
   socket.on('startGame', function(data){
     //data = {room: ___}
     var start = false;
@@ -85,13 +158,16 @@ io.sockets.on('connection', function(socket){
     if(ROOMS[data.room].players.length == 4){
       start = true;
     }
-    io.to(data.room).emit('start', {message: start});
-    //notify the room to start game
+    io.to(data.room).emit('start', {message: start}); //notify the room to start game
   });
+
+  /**
+    * @desc if a player gets disconnected (e.g. exits tab), remove player from ROOMS and PLAYERS
+  */
   socket.on('disconnect', function(){
     var room = "";
     console.log("disconnect");
-    // REMOVE PLAYER FROM ROOM
+    // remove player from room
     var removed = [];
     for (var r in ROOMS) {
       for (var i = 0; i < ROOMS[r].players.length; i++) {
@@ -102,7 +178,7 @@ io.sockets.on('connection', function(socket){
         }
       }
     }
-    // IF ROOM EXISTS, UPDATE PLAYERS IN ROOM AND PLAYER LIST
+    // if room exists, update players in ROOMS and PLAYERS dict
     if (ROOMS[room]) {
       ROOMS[room].players = removed;
       delete PLAYERS[socket.id];
@@ -112,9 +188,13 @@ io.sockets.on('connection', function(socket){
     }
   });
 
+  /**
+    * @desc if a player clicks the "leave" button to leave the game, remove player from ROOMS and PLAYERS
+    * @param data = {room}, {name} - room name and player name
+  */
   socket.on('leave', function(data){
     console.log(data.name + " is requesting to leave");
-    // REMOVE PLAYER FROM ROOM
+    // remove player from room
     var removed = []
     for (var i = 0; i < ROOMS[data.room].players.length; i++) {
       if (ROOMS[data.room].players[i].name == data.name) {
@@ -123,19 +203,81 @@ io.sockets.on('connection', function(socket){
       }
     }
     ROOMS[data.room].players = removed;
-    // REMOVE PLAYER FROM LIST OF PLAYERS
-    delete PLAYERS[socket.id];
 
-    // UPDATE PLAYERS IN THE GAME.HTML
+    delete PLAYERS[socket.id];  // remove player from PLAYERS
+
     socket.leave(data.room, function(){
       io.to(data.room).emit('newPlay', {
         players: ROOMS[data.room].players
-      });
-    })
+      });   // notify the room the updated players list
+    });   // leave/unsubscribe from room
+  });
+
+  /**
+    * @desc change player's active status to true
+    * @param data = {pID}, {name} - player ID and player name
+  */
+  socket.on('active true', function(data){
+    PLAYERS[data.pID].active = true;
+    console.log("active status of " + PLAYERS[data.pID].name + " is now: " + PLAYERS[data.pID].active);
   })
+
+  /**
+    * @desc change player's active status to false
+    * @param data = {pID}, {name} - player ID and player name
+  */
+  socket.on('active false', function(data){
+    PLAYERS[data.pID].active = false;
+    console.log("active status of " + PLAYERS[data.pID].name + " is now: " + PLAYERS[data.pID].active);
+  })
+
+  /**
+    * @desc deal cards to every player in the room
+    * @param data = {room} - room name
+  */
+  socket.on('deal', function(data){
+    console.log("dealing...");
+
+    for (var p in ROOMS[data.room].players) {
+      ROOMS[data.room].players[p].tiles = deal(ROOMS[data.room].tiles);   // deal 13 for each player
+
+      console.log(ROOMS[data.room].players[p].name + " has tiles: ");
+      console.log(ROOMS[data.room].players[p].tiles);
+
+      io.to(ROOMS[data.room].players[p].id).emit('player tiles', {
+        tiles: ROOMS[data.room].players[p].tiles
+      });   // return the list of tiles to each player's perspective screen
+    }
+  });
+
+  /**
+    * @desc draw a tile from the room's tiles list (take from top)
+    * @param data = {pID}, {name}, {room} -player ID, player name, and room name
+  */
+  socket.on('draw', function(data){
+    var draw = ROOMS[data.room].tiles.shift();
+    PLAYERS[data.pID].tiles.push(draw);
+
+    console.log(data.name + ' is drawing ' + draw);
+
+    io.to(data.pID).emit('player tiles', {
+      tiles: PLAYERS[data.pID].tiles
+    });   // return the list of tiles to the player's screen
+  });
 
 });
 
+
+// ----------------------------------------------------------------------------
+// HELPER FUNCTIONS
+// ----------------------------------------------------------------------------
+
+/**
+  * @desc checks if the player's name already exists in the room
+  * @param {string} r - the room name
+  * @param {string} n - the player's name
+  * @return {bool} - true or false
+ */
 function checkPlayer(r, n){
   var plays = ROOMS[r].players;
   for(var i in plays){
@@ -144,4 +286,33 @@ function checkPlayer(r, n){
     }
   }
   return false;
+}
+
+ /**
+   * @desc shuffles an array using the Fisher-Yates shuffle algorithm
+   * @param {Array} a
+   * @return {Array} a - the shuffled array
+  */
+function shuffle(a) {
+    var j, x, i;
+    for (i = a.length - 1; i > 0; i--) {
+        j = Math.floor(Math.random() * (i + 1));
+        x = a[i];
+        a[i] = a[j];
+        a[j] = x;
+    }
+    return a;
+}
+
+/**
+  * @desc deals 13 tiles (take out 13 items from the top of the list/array)
+  * @param {Array} a - the list of tiles to be dealt
+  * @return {Array} - list of the 13 tiles
+ */
+function deal(a) {
+    var hand = []
+    for (var i = 0; i < 13; i++) {
+      hand.push(a.shift());
+    }
+    return hand;
 }
