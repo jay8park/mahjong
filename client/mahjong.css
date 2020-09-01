@@ -1,3 +1,143 @@
 *{
     font-family: 'Abel';
+    
+}
+body{
+    padding-left: 30px;
+    padding-right: 30px;
+    max-width: 3000px;
+}
+/* .row{
+    border-color: red;
+    border-style: solid;
+}
+.col{
+    border-color: blue;
+    border-style: solid;
+} */
+.container{
+    border-style: solid;
+}
+.other{
+    height: 85%;
+}
+.self{
+    height: 15%;
+    align-items: center;
+    margin-left: 15%;
+}
+.leftside, .rightside{
+    writing-mode:vertical-lr;
+}
+.westleft{
+    width: 30%;
+}
+.whand{
+    height: 50%;
+    width: 80%;
+    margin-top: 15%;
+    margin-left: 1%;
+}
+.westright{
+    height: 100%;
+    width: 60%;
+    margin-left: 5%;
+}
+.wrev{
+    height: 80%;
+    width: 90%;
+    margin-top: 10%;
+}
+.eastleft{
+    margin-right: 5%;
+    margin-left: 1%;
+    width: 60%;
+}
+.eastright{
+    width: 30%;
+}
+.north{
+    height: 10%;
+}
+.nhand{
+    height: 80%;
+    width: 50%;
+    margin-top: 0.5%;
+    margin-left: 5%;
+}
+.nrev{
+    height: 80%;
+    width: 80%;
+}
+.rev{
+    height: 20%;
+}
+.discard{
+    height: 50%;
+}
+.srev{
+    height: 80%;
+    margin-top: 1%;
+}
+.buttons{
+    align-items: center;
+    padding: 5%;
+    margin-top: 2%;
+}
+.btn{
+    width: 70%;
+    margin-left: 25%;
+    margin-top: 5%;
+}
+#west{
+    margin-top: 5%;
+    transform: rotate(180deg);
+}
+#east{
+    margin-top: 5%;
+}
+#north{
+    margin-top: 2%;
+    margin-left: 20%;
+}
+.hand{
+    height: 80%;
+}
+.side{
+    height: 15%;
+    transform: rotate(90deg);
+    margin-top: -4%;
+    background-image: url(img/background.png);
+    background-size: 100%;
+}
+.rside{
+    height: 15%;
+    transform: rotate(-90deg);
+    margin-top: -4%;
+    background-image: url(img/background.png);
+    background-size: 100%;
+}
+.nor{
+    height: 80%;
+    background-image: url(img/background.png);
+    background-size: 100%;
+    transform: rotate(180deg);
+}
+.sou{
+    height: 80%;
+    background-image: url(img/background.png);
+    background-size: 100%;
+}
+.disc{
+    height: 25%;
+    margin-left: 2.8%;
+    background-image: url(img/background.png);
+    background-size: 100%;
+    opacity: 30%;
+}
+#c8{
+    border-style: solid;
+    opacity: 100%;
+    border-width: 1px;
+    border-color: red;
 }
