@@ -7,14 +7,13 @@ for(var item in params){
     var sides = params[item].split("=");
     if(sides[0] == "room"){
         Room = sides[1];
-        console.log("set room");
     }
     else if(sides[0] == "name"){
         Name = sides[1];
-        console.log("set name" + sides[1]);
     }
 }
-console.log("room: "+Room+ " name: "+Name);
+//getting URL query data
+
 document.getElementById('room').innerText += Room;
 console.log("this is my ID: " + socket.id);
 socket.emit('newJoin', {room: Room, name: Name});
@@ -23,7 +22,7 @@ socket.on('newPlay', function(data){
     var html = "";
     var list = data.players;
     for(var p in list){
-        html += "<li>"+list[p].name+"</li>";
+        html += "<li class='list-group-item'>"+list[p].name+"</li>";
     }
     document.getElementById('players').innerHTML = html;
 });
