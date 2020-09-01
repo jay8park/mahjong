@@ -31,7 +31,7 @@ io.sockets.on('connection', function(socket){
     console.log("requested to make room: " + data.code);
     var madeRoom = false;
     if(!ROOMS[data.code]){
-      var Room = {}; 
+      var Room = {};
       Room.id = data.code;
       Room.players = [];
       ROOMS[data.code] = Room; //add room to list
@@ -68,7 +68,7 @@ io.sockets.on('connection', function(socket){
     //socket.id = playID;
     var Player = {};
     Player.id = socket.id;
-    Player.name = data.name;    
+    Player.name = data.name;
     PLAYERS[Player.id] = Player;
     //add Player and socket to room
     ROOMS[data.room].players.push(Player);
@@ -76,7 +76,7 @@ io.sockets.on('connection', function(socket){
       io.to(data.room).emit('newPlay', { players: ROOMS[data.room].players });
     }); //data.room
 
-    //notify the room 
+    //notify the room
   });
   socket.on('startGame', function(data){
     //data = {room: ___}
@@ -89,9 +89,50 @@ io.sockets.on('connection', function(socket){
     //notify the room to start game
   });
   socket.on('disconnect', function(){
-    delete PLAYERS[socket.id];  
+    var room = "";
+    console.log("disconnect");
+    // REMOVE PLAYER FROM ROOM
+    var removed = [];
+    for (var r in ROOMS) {
+      for (var i = 0; i < ROOMS[r].players.length; i++) {
+        if (ROOMS[r].players[i].id == socket.id) {
+          room = r;
+          removed = ROOMS[r].players.splice(i-1, 1);
+          break;
+        }
+      }
+    }
+    // IF ROOM EXISTS, UPDATE PLAYERS IN ROOM AND PLAYER LIST
+    if (ROOMS[room]) {
+      ROOMS[room].players = removed;
+      delete PLAYERS[socket.id];
+      io.to(room).emit('newPlay', {
+        players: ROOMS[room].players
+      });
+    }
   });
 
+  socket.on('leave', function(data){
+    console.log(data.name + " is requesting to leave");
+    // REMOVE PLAYER FROM ROOM
+    var removed = []
+    for (var i = 0; i < ROOMS[data.room].players.length; i++) {
+      if (ROOMS[data.room].players[i].name == data.name) {
+        removed = ROOMS[data.room].players.splice(i-1, 1);
+        break;
+      }
+    }
+    ROOMS[data.room].players = removed;
+    // REMOVE PLAYER FROM LIST OF PLAYERS
+    delete PLAYERS[socket.id];
+
+    // UPDATE PLAYERS IN THE GAME.HTML
+    socket.leave(data.room, function(){
+      io.to(data.room).emit('newPlay', {
+        players: ROOMS[data.room].players
+      });
+    })
+  })
 
 });
 
