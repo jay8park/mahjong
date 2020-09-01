@@ -79,7 +79,7 @@ var tiles = ["s1", "s1", "s1", "s1", "s2", "s2", "s2", "s2", "s3", "s3", "s3", "
 io.sockets.on('connection', function(socket){
   /**
     * @desc creates a new room if the room does not already exist
-    * @param data = {code} - code is the room password/code
+    * @param data = {string: code} - code is the room password/code
   */
   socket.on('createRoom', function(data){
     console.log("requested to make room: " + data.code);
@@ -97,13 +97,15 @@ io.sockets.on('connection', function(socket){
       madeRoom = true;  //made room
     }
 
-    socket.emit('roomCreated', {message:madeRoom});   //notify client to redirect or display error
+    socket.emit('roomCreated', {
+      message: madeRoom
+    });   //notify client to redirect or display error
   });
 
   /**
     * @desc players can join an existing room
     * also checks for existing name, if the room is full, and other error checks
-    * @param data = {room}, {name} - room name and player name
+    * @param data = {string: room}, {string: name} - room name and player name
   */
   socket.on('joinRoom', function(data){
     console.log("requested to join room: "+data.room);
@@ -126,7 +128,7 @@ io.sockets.on('connection', function(socket){
 
   /**
     * @desc creates a Player object
-    * @param data = {room}, {name} - room name and player name
+    * @param data = {string: room}, {string: name} - room name and player name
   */
   socket.on('newJoin', function(data){
     console.log("this is the socket id: " + socket.id);
@@ -142,14 +144,16 @@ io.sockets.on('connection', function(socket){
     ROOMS[data.room].players.push(Player);  //add Player and socket to room
 
     socket.join(data.room, function(){
-      io.to(data.room).emit('newPlay', { players: ROOMS[data.room].players });
+      io.to(data.room).emit('newPlay', {
+        players: ROOMS[data.room].players
+      });
     });   //notify the room
   });
 
   /**
     * @desc players can join an existing room
     * also checks for existing name, if the room is full, and other error checks
-    * @param data = {room}, {name} - room name and player name
+    * @param data = {string: room}, {string: name} - room name and player name
   */
   socket.on('startGame', function(data){
     //data = {room: ___}
@@ -158,16 +162,19 @@ io.sockets.on('connection', function(socket){
     if(ROOMS[data.room].players.length == 4){
       start = true;
     }
-    io.to(data.room).emit('start', {message: start}); //notify the room to start game
+    io.to(data.room).emit('start', {
+      message: start
+    }); //notify the room to start game
   });
 
   /**
     * @desc if a player gets disconnected (e.g. exits tab), remove player from ROOMS and PLAYERS
   */
   socket.on('disconnect', function(){
-    var room = "";
     console.log("disconnect");
+
     // remove player from room
+    var room = "";
     var removed = [];
     for (var r in ROOMS) {
       for (var i = 0; i < ROOMS[r].players.length; i++) {
@@ -190,7 +197,7 @@ io.sockets.on('connection', function(socket){
 
   /**
     * @desc if a player clicks the "leave" button to leave the game, remove player from ROOMS and PLAYERS
-    * @param data = {room}, {name} - room name and player name
+    * @param data = {string: room}, {string: name} - room name and player name
   */
   socket.on('leave', function(data){
     console.log(data.name + " is requesting to leave");
@@ -213,27 +220,63 @@ io.sockets.on('connection', function(socket){
     });   // leave/unsubscribe from room
   });
 
+
+
+
   /**
     * @desc change player's active status to true
-    * @param data = {pID}, {name} - player ID and player name
+    * @param data = {string: pID}, {string: name} - player ID and player name
   */
   socket.on('active true', function(data){
     PLAYERS[data.pID].active = true;
     console.log("active status of " + PLAYERS[data.pID].name + " is now: " + PLAYERS[data.pID].active);
-  })
+  });
 
   /**
     * @desc change player's active status to false
-    * @param data = {pID}, {name} - player ID and player name
+    * @param data = {string: pID}, {string: name} - player ID and player name
   */
   socket.on('active false', function(data){
     PLAYERS[data.pID].active = false;
     console.log("active status of " + PLAYERS[data.pID].name + " is now: " + PLAYERS[data.pID].active);
-  })
+  });
+
+  /**
+    * @desc change player's active status to false and the next player's active status to true if the status changes while they play in turn
+    * @param data = {string: pID}, {string: room} - player ID and room name
+  */
+  socket.on('active switch', function(data){
+    PLAYERS[data.pID].active = false;
+    var index = 0;
+    for (var p in ROOMS[data.room].players) {
+      if (ROOMS[data.room].players[p].id == data.pID) {   // find the current player's index in order to get the next player's index
+        index = p;
+        break;
+      }
+    }
+    var nextPlayerIndex = 0;
+    if (index != ROOMS[data.room].players.length - 1) { // if the current player is the last item in the list, go back to beginning of list
+      nextPlayerIndex = index + 1;
+    }
+    ROOMS[data.room].players[nextPlayerIndex].active = true; // set next player's active status to true
+
+    console.log("active status of " + PLAYERS[data.pID].name + " is now: " + PLAYERS[data.pID].active);
+    console.log("active status of " + ROOMS[data.room].players[nextPlayerIndex].name + " is now: " + ROOMS[data.room].players[nextPlayerIndex].active);
+  });
+
+  /**
+    * @desc change player's active status to false and the next player's active status to true if the status changes bc of a steal
+    * @param data = {string: pID}, {string: room} - player ID and room name
+  */
+  socket.on('active switch steal', function(data){
+  });
+
+
+
 
   /**
     * @desc deal cards to every player in the room
-    * @param data = {room} - room name
+    * @param data = {string: room} - room name
   */
   socket.on('deal', function(data){
     console.log("dealing...");
@@ -250,15 +293,40 @@ io.sockets.on('connection', function(socket){
     }
   });
 
+
+
+
   /**
     * @desc draw a tile from the room's tiles list (take from top)
-    * @param data = {pID}, {name}, {room} -player ID, player name, and room name
+    * @param data = {string: pID}, {string: name}, {string: room} -player ID, player name, and room name
   */
   socket.on('draw', function(data){
     var draw = ROOMS[data.room].tiles.shift();
     PLAYERS[data.pID].tiles.push(draw);
 
     console.log(data.name + ' is drawing ' + draw);
+
+    io.to(data.pID).emit('player tiles', {
+      tiles: PLAYERS[data.pID].tiles
+    });   // return the list of tiles to the player's screen
+  });
+
+  /**
+    * @desc discard a tile from player's hand/tiles
+    * @param data = {string: pID}, {string: name}, {string: tile}, {string: room} - player ID, player name, tile to discard, and room name
+  */
+  socket.on('discard', function(data){
+    console.log(data.name + " is discarding tile: " + data.tile);
+
+    var removed = [];
+    for (var i = 0; i < PLAYERS[data.pID].tiles.length; i++) {
+      if (PLAYERS[data.pID].tiles[i] == data.tile) {
+        removed = PLAYERS[data.pID].tiles.splice(i-1, 1);   // remove tile from player's hand
+        ROOMS[data.room].discard.push(data.tile);     // add discarded tile into room's discard pile/list
+        ROOMS[data.room].last = data.tile;      // set last discard tile
+        break;
+      }
+    }
 
     io.to(data.pID).emit('player tiles', {
       tiles: PLAYERS[data.pID].tiles
