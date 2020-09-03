@@ -92,6 +92,7 @@ io.sockets.on('connection', function(socket){
       Room.tiles = shuffle(tiles);
       Room.discard = [];
       Room.last = "";
+      Room.steal = false;
 
       ROOMS[data.code] = Room;  //add room to list
       madeRoom = true;  //made room
@@ -250,14 +251,15 @@ io.sockets.on('connection', function(socket){
     var index = 0;
     for (var p in ROOMS[data.room].players) {
       if (ROOMS[data.room].players[p].id == data.pID) {   // find the current player's index in order to get the next player's index
-        index = p;
+        index = parseInt(p);
         break;
       }
     }
     var nextPlayerIndex = 0;
     if (index != ROOMS[data.room].players.length - 1) { // if the current player is the last item in the list, go back to beginning of list
-      nextPlayerIndex = index + 1;
+      nextPlayerIndex = parseInt(index) + 1;
     }
+
     ROOMS[data.room].players[nextPlayerIndex].active = true; // set next player's active status to true
 
     console.log("active status of " + PLAYERS[data.pID].name + " is now: " + PLAYERS[data.pID].active);
@@ -269,6 +271,17 @@ io.sockets.on('connection', function(socket){
     * @param data = {string: pID}, {string: room} - player ID and room name
   */
   socket.on('active switch steal', function(data){
+    // set the current active player's status to false
+    for (var p in ROOMS[data.room].players) {
+      if (ROOMS[data.room].players[p].active == true) {
+        ROOMS[data.room].players[p].active = false;
+        console.log("active status of " + ROOMS[data.room].players[p].name + " is now: " + ROOMS[data.room].players[p].active);
+        break;
+      }
+    }
+    PLAYERS[data.pID].active = true;     // set active status of stealer to be true
+
+    console.log("active status of " + PLAYERS[data.pID].name + " is now: " + PLAYERS[data.pID].active);
   });
 
 
@@ -301,6 +314,7 @@ io.sockets.on('connection', function(socket){
     * @param data = {string: pID}, {string: name}, {string: room} -player ID, player name, and room name
   */
   socket.on('draw', function(data){
+    ROOMS[data.room].steal = false;     // players cannot steal tiles from discard when active player draws a tile
     var draw = ROOMS[data.room].tiles.shift();
     PLAYERS[data.pID].tiles.push(draw);
 
@@ -321,17 +335,53 @@ io.sockets.on('connection', function(socket){
     var removed = [];
     for (var i = 0; i < PLAYERS[data.pID].tiles.length; i++) {
       if (PLAYERS[data.pID].tiles[i] == data.tile) {
-        removed = PLAYERS[data.pID].tiles.splice(i-1, 1);   // remove tile from player's hand
+        removed = PLAYERS[data.pID].tiles.splice(i, 1);   // remove tile from player's hand
         ROOMS[data.room].discard.push(data.tile);     // add discarded tile into room's discard pile/list
         ROOMS[data.room].last = data.tile;      // set last discard tile
         break;
       }
     }
 
+    ROOMS[data.room].steal = true; // players can now steal tiles from discard
+
     io.to(data.pID).emit('player tiles', {
       tiles: PLAYERS[data.pID].tiles
     });   // return the list of tiles to the player's screen
   });
+
+  /**
+    * @desc steal the discarded tile
+    * @param data = {string: pID}, {string: name}, {string: room} - player ID, player name, and room name
+  */
+  socket.on('steal', function(data){
+    console.log(data.name + " is stealing discarded tile: " + ROOMS[data.room].last);
+
+    PLAYERS[data.pID].tiles.push(ROOMS[data.room].last);
+    ROOMS[data.room].last = "";
+    ROOMS[data.room].discard.pop();
+    ROOMS[data.room].steal = true; // players can now steal tiles from discard
+
+    io.to(data.pID).emit('player tiles', {
+      tiles: PLAYERS[data.pID].tiles
+    });   // return the list of tiles to the player's screen
+  });
+
+  /**
+    * @desc reveal completed set
+    * @param data = {string: pID}, {string: name}, {string: room} - player ID, player name, and room name
+  */
+  // socket.on('reveal', function(data){
+  //   console.log(data.name + " is stealing discarded tile: " + ROOMS[data.room].last);
+  //
+  //   PLAYERS[data.pID].tiles.push(ROOMS[data.room].last);
+  //   ROOMS[data.room].last = "";
+  //   ROOMS[data.room].discard.pop();
+  //   ROOMS[data.room].steal = true; // players can now steal tiles from discard
+  //
+  //   io.to(data.pID).emit('player tiles', {
+  //     tiles: PLAYERS[data.pID].tiles
+  //   });   // return the list of tiles to the player's screen
+  // });
 
 });
 

@@ -112,6 +112,26 @@ leave.onclick = function() {
 
 
 // ----------------------------------------------------------------------------
+// DRAW BUTTON
+// ----------------------------------------------------------------------------
+var draw = document.getElementById('draw');
+
+/**
+  * @desc draw a tile
+ */
+draw.onclick = function() {
+  console.log("drawing");
+
+  // draw a tile from the deck
+  socket.emit('draw', {
+    pID: socket.id,
+    name: Name,
+    room: Room
+  });
+}
+
+
+// ----------------------------------------------------------------------------
 // DISCARD BUTTON
 // ----------------------------------------------------------------------------
 var discard = document.getElementById('discard');
@@ -120,10 +140,10 @@ var discard = document.getElementById('discard');
   * @desc discard tile based on tile id (e.g. s1, s2)
   * NOTE, ANOTHER OPTION WE CAN DO IS REMOVE BASED ON INDEX
  */
-leave.onclick = function() {
+discard.onclick = function() {
   console.log("discard");
 
-  var tile = document.getElementById('tile');
+  var tile = document.getElementById('tile').value;
   // discard the chosen tile
   socket.emit('discard', {
     name: Name,
@@ -137,6 +157,81 @@ leave.onclick = function() {
     room: Room
   });
 }
+
+
+// ----------------------------------------------------------------------------
+// STEAL BUTTON
+// ----------------------------------------------------------------------------
+var steal = document.getElementById('steal');
+
+/**
+  * @desc steal the discarded tile
+ */
+steal.onclick = function() {
+  console.log("stealing");
+
+  // call server
+  socket.emit('steal', {
+    pID: socket.id,
+    name: Name,
+    room: Room
+  });
+  // request the server side to change the status of the player (who stole) as active
+  socket.emit('active switch steal', {
+    pID: socket.id,
+    room: Room
+  });
+
+  // disable discard button
+  var discard = document.getElementById('discard');
+  discard.disable = true;
+  // need to either reveal or cancel
+}
+
+
+// ----------------------------------------------------------------------------
+// REVEAL BUTTON
+// ----------------------------------------------------------------------------
+// var reveal = document.getElementById('reveal');
+//
+// /**
+//   * @desc reveal the completed set due to the stolen tile
+//  */
+// reveal.onclick = function() {
+//   console.log("revealing");
+//
+//   var tiles = document.getElementById('tile').value.split(',');
+//
+//   call server
+//   socket.emit('reveal', {
+//     pID: socket.id,
+//     name: Name,
+//     room: Room,
+//     tiles: tiles
+//   });
+//   // // request the server side to change the status of the player (who stole) as active
+//   // socket.emit('active switch steal', {
+//   //   pID: socket.id,
+//   //   room: Room
+//   // });
+//
+//   // enable discard button
+//   var discard = document.getElementById('discard');
+//   discard.disable = false;
+// }
+
+
+// ----------------------------------------------------------------------------
+// CANCEL BUTTON
+// ----------------------------------------------------------------------------
+
+
+
+// ----------------------------------------------------------------------------
+// WIN BUTTON
+// ----------------------------------------------------------------------------
+
+
 
 
 // ----------------------------------------------------------------------------
