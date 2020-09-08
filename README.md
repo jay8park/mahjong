@@ -1,6 +1,7 @@
 # mahjong
-
+<insert description> 
 ## Server
+  app.js
 ### Objects
 Players:
 - id (socket id)
@@ -18,3 +19,6 @@ Rooms:
 ### Functions
 
 ## Client
+  join.js
+  games.js
+## Logic
