@@ -57,20 +57,60 @@ on ('connection')
   - descr: change player's active status to true
   - call to client: N/A
 - active false
+  - data: pID (string), name (string) -- player ID and player name
+  - descr: change player's active status to false
+  - call to client: N/A
 - active switch
+  - data: pID (string), room (string) -- player ID and room name
+  - descr: change player's active status to false and the next player's active status to true
+  - call to client: N/A
 - active swtich steal
+  - data: pID (string), room (string) -- player ID and room name
+  - descr: change current player's active status to false and the active status of the player who stole to true
+  - call to client: N/A
+ 
 - deal
+  - data: room (string) -- room name
+  - descr: deal cards to every player in the room
+  - call to client: player tiles -- call to the player's client via their socket id
 - draw
+  - data: pID (string), name (string), room (string) -- player ID, player name, room name
+  - descr: draw a tile from the room's tiles list (take from top)
+  - call to client: player tiles -- to the player via socket id
 - discard
+  - data: pID (string), name (string) tile (string), room (string) -- player ID, player name, tile to discard, room name
+  - descr: discard a tile from player's hand/tiles
+  - call to client: player tiles -- to the player via socket id
 - steal
+  - data: pID (string), name (string), room (string) -- player ID, player name, room name
+  - descr: steal the most recently discarded tile
+  - call to client: player tiles -- to the player via socket id
 - reveal
+  - data: pID (string), name (string), room (string), tiles (list of strings) -- player ID, player name, room name, list of tiles to reveal
+  - descr: reveal completed set
+  - call to client: player tiles -- to the player via socket id
 
 helper functions
 - checkPlayer
+  - param: r (string), n (string) -- room name and player name
+  - return: boolean
+  - descr: checks if the player's name already exists in the room
 - shuffle
+  - param: a (array) 
+  - return: a (array) -- shuffled array
+  - descr: shuffles an array via fisher-yates shuffle algorithm
 - deal
+  - param: a (array of string) -- list of tiles to be dealt
+  - return: (array) -- list of 13 tiles
+  - descr: deals 13 tiles 
 - isIdentical
+  - param: a (array) -- the list of tiles (string)
+  - return: (boolean) -- true if each tile is identical, false if not
+  - descr: checks to see if each tile in the array is identical
 - isConsecutive
+  - param: a (array) -- the list of tiles (string)
+  - return: (boolean) -- true if each tile is identical, false if not
+  - descr: checks to see if each tile in the array is consecutive within the same suite
 
 Note: room name and room code are synonymous 
 
