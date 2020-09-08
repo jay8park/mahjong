@@ -116,11 +116,15 @@ Note: room name and room code are synonymous
 
 ## Client
 ### join.js
-#### Fields
+#### Functions
+- makeNew.onclick
+  - descr:
+  - call to server: createRoom
+  - roomCreated
+    - data: message (boolean) -- status on whether to create room or not
 
+### games.js
+#### Fields
 #### Functions
 
-games.js
-### Fields
-### Functions
 ## Logic
