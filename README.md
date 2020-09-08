@@ -31,13 +31,13 @@ on ('connection')
   - data: code (string) -- room code (used as room id)
   - descr: creates a new room if the room (name/code) does not already exist
   - call to client: roomCreated
-- joinROom
+- joinRoom
   - data: room (string), name (string) -- room name and player name
   - desc: lets players join an existing room, only if the player's name is not taken and the room is not full (and other error checks)
   - call to client: joined
 - newJoin
   - data: room (string), name (string) -- room name and player name
-  - descr: creates a player object and add to PLAYERS dictionary
+  - descr: checks for errros/etc. and then creates a player object and add to PLAYERS dictionary
   - call to client: newPlay
 - startGame
   - data: room (string) -- room name 
