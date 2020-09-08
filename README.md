@@ -28,6 +28,8 @@ Room:
 ### Functions
 on ('connection')
 - createRoom
+  - param
+  - descr
 - roomCreated
 - joinROom
 - newJoin
@@ -44,11 +46,12 @@ on ('connection')
 - steal
 - reveal
 
-checkPlayer
-shuffle
-deal
-isIdentical
-isConsecutive
+helper functions
+- checkPlayer
+- shuffle
+- deal
+- isIdentical
+- isConsecutive
 
 
 ## Client
