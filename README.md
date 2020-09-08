@@ -131,10 +131,11 @@ HTML/JS Functions
   - descr: when a user clicks the "join" button, join the specific room (after doing error checking) via server and redirect page
   - call to server: joinRoom
   - joined
-    - data: message (boolean) -- status on whether to join room or not
+    - data: message (string) -- status on whether to join room or not
 
 ### games.js
 #### Fields
+
 #### Functions
 
 ## Logic
