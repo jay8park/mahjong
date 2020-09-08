@@ -200,11 +200,34 @@ Home Page
   - w/out a game code or name
 - If you click "Join Game"
   - w/ an existing game code and a unique name
-
+  - w/ an existing game code and a taken name
+  - w/ an existing game code, a unique name, and maxed out capacity
+  - w/ a non-existing game code and a unique name
+  - w/ a non-existing game code and a taken name
+  
 Waiting Room <br>
 - If you click "start" without 4 players
 - If you click "start" with 4 players
+- If you click "leave"
+- If you exit the page (disconnect)
+- If you refresh the page
 
-Game Room
+Game Room <br>
+- If you click "draw"
+  - on your turn
+  - not on your turn
+- If you click "discard"
+  - on your turn
+  - not on your turn
+- If you click on "steal"
+  - when steal flag is false
+  - when steal flag is true
+    - on your turn
+    - not on your turn
+- If you click on "reveal"
+- If you click on "cancel"
+- If you click on "win"
+- If you refresh the page
+- If you leave the page (disconnect)
   
 Note: the waiting room and game room is the same html page
