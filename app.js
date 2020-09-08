@@ -85,15 +85,7 @@ io.sockets.on('connection', function(socket){
     var madeRoom = false;
 
     if(!ROOMS[data.code]){
-      var Room = {};
-      Room.id = data.code;
-      Room.players = [];
-      Room.tiles = shuffle(tiles);
-      Room.discard = [];
-      Room.last = "";
-      Room.steal = false;
-
-      ROOMS[data.code] = Room;  //add room to list
+      createRoom(data.code);
       madeRoom = true;  //made room
     }
     //notify client to redirect or display error
@@ -132,27 +124,27 @@ io.sockets.on('connection', function(socket){
   */
   socket.on('newJoin', function(data){
     console.log("this is the socket id: " + socket.id);
-    if(!ROOMS[data.room]){
-      window.location.href = '/';
-    }
-    else if(checkPlayer(data.room, data.name)){
-      
-    }
-    var Player = {};
-    Player.id = socket.id;
-    Player.name = data.name;
-    Player.tiles = [];
-    Player.revealed = [];
-    Player.active = false;
-
-    PLAYERS[Player.id] = Player;
-    ROOMS[data.room].players.push(Player);  //add Player and socket to room
-
-    socket.join(data.room, function(){
-      io.to(data.room).emit('newPlay', {
-        players: ROOMS[data.room].players
+    // this can be called by refreshing in waiting room, how handle edge cases
+    if(ROOMS[data.room] && checkPlayer(data.room, data.name)){
+      io.to(socket.id).emit('newPlay', {
+        error: "refresh"
       });
-    });   //notify the room
+    }
+    else{
+      if(!ROOMS[data.room]){
+        createRoom(data.room);
+      }
+      var player = createPlayer(data.name, socket.id);
+      ROOMS[data.room].players.push(player);  //add Player to room
+      console.log("created room: " + JSON.stringify(ROOMS[data.room]));
+      console.log("players: " + JSON.stringify(PLAYERS));
+      socket.join(data.room, function(){
+        io.to(data.room).emit('newPlay', {
+          players: ROOMS[data.room].players
+        });
+      });   //notify the room
+    }
+    
   });
 
   /**
@@ -170,6 +162,7 @@ io.sockets.on('connection', function(socket){
     io.to(data.room).emit('start', {
       message: start
     }); //notify the room to start game
+    ROOMS[data.room].inplay = true;
   });
 
   /**
@@ -181,23 +174,55 @@ io.sockets.on('connection', function(socket){
     // remove player from room
     var room = "";
     var removed = [];
+    var one = false;
+    var index = -1;
     for (var r in ROOMS) {
       for (var i = 0; i < ROOMS[r].players.length; i++) {
         if (ROOMS[r].players[i].id == socket.id) {
+          if(ROOMS[r].inplay){
+            console.log("return to home, but room still exists...");
+            // --- currently crashes the game (take back to home screen)
+            // --- if someone leaves while the game is in play.
+            // --- but the room still exists....
+            io.to(r).emit('newPlay', {
+              error: "game in play."
+            });
+          }
           room = r;
-          removed = ROOMS[r].players.splice(i-1, 1);
+          if(ROOMS[r].players.length == 1){
+            //special case of one player in room
+            one = true;
+            console.log("special case called.");
+            break;
+          } 
+          index = i;
           break;
         }
       }
+      if(index >= 0){
+        removed = ROOMS[r].players.splice(index, 1);
+        console.log("removed: " + JSON.stringify(removed));
+      }
+      break;      
     }
     // if room exists, update players in ROOMS and PLAYERS dict
     if (ROOMS[room]) {
-      ROOMS[room].players = removed;
-      delete PLAYERS[socket.id];
-      io.to(room).emit('newPlay', {
-        players: ROOMS[room].players
-      });
+      console.log("current room: "+ JSON.stringify(ROOMS[room].players));
+      if(one == true){
+        delete ROOMS[room];
+      }
+      else{
+        //ROOMS[room].players = removed;
+        //   update the waiting room list
+        io.to(room).emit('newPlay', {
+          players: ROOMS[room].players
+        });
+      }      
+      
     }
+    delete PLAYERS[socket.id];
+    console.log("rooms: "+ JSON.stringify(ROOMS));
+    console.log("players: "+ JSON.stringify(PLAYERS));
   });
 
   /**
@@ -393,6 +418,42 @@ io.sockets.on('connection', function(socket){
 // ----------------------------------------------------------------------------
 // HELPER FUNCTIONS
 // ----------------------------------------------------------------------------
+
+/**
+  * @desc creates a Room object and adds to the ROOMS list
+  * @param {string} r - the room name
+  * @return {Object} - the Room
+ */
+function createRoom(r){
+  var Room = {};
+  Room.id = r;
+  Room.players = [];
+  Room.tiles = shuffle(tiles);
+  Room.discard = [];
+  Room.last = "";
+  Room.steal = false;
+  Room.inplay = false;
+  ROOMS[r] = Room;  //add room to list
+  return Room;
+}
+
+/**
+  * @desc creates a Player object and adds to the PLAYERS list
+  * @param {string} p - the player name
+  * @param {string} s - socket id
+  * @return {Object} - the Player
+ */
+function createPlayer(p, s){
+  var Player = {};
+  Player.id = s;
+  Player.name = p;
+  Player.tiles = [];
+  Player.revealed = [];
+  Player.active = false;
+  PLAYERS[Player.id] = Player;
+  return Player;
+}
+
 
 /**
   * @desc checks if the player's name already exists in the room

@@ -104,10 +104,10 @@ leave.onclick = function() {
   console.log("leave");
 
   // leave/unsubscribe to room
-  socket.emit('leave', {
-    room: Room,
-    name: Name
-  });
+  // socket.emit('leave', {
+  //   room: Room,
+  //   name: Name
+  // });
   window.location.href = "/";   // redirect to home page
 }
 
@@ -242,16 +242,20 @@ steal.onclick = function() {
 /**
   * @desc display players who have joined the game (waiting list)
   * @param data = {Array: players} - list of players associated with the room
+  * @param data = {String: error} - error message
  */
 socket.on('newPlay', function(data){
-    console.log("received emission");
+  if(data.error){
+    window.location.href = "/";
+  }
+  console.log("received emission");
 
-    var html = "";
-    var list = data.players;
-    for(var p in list){
-        html += "<li class='list-group-item'>"+list[p].name+"</li>";
-    }
-    document.getElementById('players').innerHTML = html;
+  var html = "";
+  var list = data.players;
+  for(var p in list){
+      html += "<li class='list-group-item'>"+list[p].name+"</li>";
+  }
+  document.getElementById('players').innerHTML = html;
 });
 
 /**
