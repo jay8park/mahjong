@@ -90,7 +90,7 @@ on ('connection')
   - descr: reveal completed set
   - call to client: player tiles -- to the player via socket id
 
-helper functions
+Helper Functions
 - checkPlayer
   - param: r (string), n (string) -- room name and player name
   - return: boolean
@@ -121,12 +121,17 @@ Socket Functions
 - roomCreated -- within makeNew.onclick
 - joined -- within joinRoom.onclick
 
-   
+HTML/JS Functions
 - makeNew.onclick
-  - descr:
+  - descr: when a user clicks on the "new" button, create a new room (after doing error checking) via server and redirect page
   - call to server: createRoom
   - roomCreated
     - data: message (boolean) -- status on whether to create room or not
+- joinRoom.onclick
+  - descr: when a user clicks the "join" button, join the specific room (after doing error checking) via server and redirect page
+  - call to server: joinRoom
+  - joined
+    - data: message (boolean) -- status on whether to join room or not
 
 ### games.js
 #### Fields
