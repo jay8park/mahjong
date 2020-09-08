@@ -117,6 +117,11 @@ Note: room name and room code are synonymous
 ## Client
 ### join.js
 #### Functions
+Socket Functions
+- roomCreated -- within makeNew.onclick
+- joined -- within joinRoom.onclick
+
+   
 - makeNew.onclick
   - descr:
   - call to server: createRoom
