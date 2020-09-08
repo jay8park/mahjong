@@ -6,6 +6,7 @@ app.js
 
 ### Objects
 PLAYERS -- dictionary of player -- key: id (socket)
+
 ROOMS -- dictionary of room -- key: id (room code)
 
 Player:
@@ -25,8 +26,37 @@ Room:
 - steal -- boolean -- if false, no one is able to steal, if true, players may steal; note, normally set to false when a player is in turn (draws a tile/discarding tile, etc.)
 
 ### Functions
+on ('connection')
+- createRoom
+- roomCreated
+- joinROom
+- newJoin
+- startGame
+- disconnect
+- leave
+- active true
+- active false
+- active switch
+- active swtich steal
+- deal
+- draw
+- discard
+- steal
+- reveal
+
+checkPlayer
+shuffle
+deal
+isIdentical
+isConsecutive
+
 
 ## Client
-  join.js
-  games.js
+join.js
+### Fields
+### Functions
+
+games.js
+### Fields
+### Functions
 ## Logic
