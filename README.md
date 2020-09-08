@@ -68,7 +68,7 @@ on ('connection')
   - data: pID (string), room (string) -- player ID and room name
   - descr: change current player's active status to false and the active status of the player who stole to true
   - call to client: N/A
- 
+     
 - deal
   - data: room (string) -- room name
   - descr: deal cards to every player in the room
@@ -117,6 +117,7 @@ Note: room name and room code are synonymous
 ## Client
 join.js
 ### Fields
+
 ### Functions
 
 games.js
