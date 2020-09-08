@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-<link rel='stylesheet' href='/client/join.css'>
 <link href='https://fonts.googleapis.com/css?family=Abel' rel='stylesheet'>
+<link rel='stylesheet' href='/client/join.css'>
+
 <!-- login page -->
 
 <div class='row'>
@@ -35,9 +36,9 @@
         <!-- <div class='col-sm-6'> -->
             <form id="userForm">
                 <input placeholder="name" class='form-control ins' id="user" type="text">
-                <br>
+                <p class="error" id="name-err"></p>
                 <input placeholder="room code" class='form-control ins' id="room" type="text">
-                <br>
+                <p class="error" id="room-err"></p>
                 <input class='btn btn-secondary' id="new" type="button" value="Create Game">
                 <input class='btn btn-secondary' id="join" type="button" value="Join Game"> 
             </form>
@@ -46,8 +47,8 @@
     </div>
 </div>
 
-
-
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 <script src="client/join.js"></script>

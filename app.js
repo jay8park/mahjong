@@ -31,7 +31,6 @@ console.log("Server started.");
 // ----------------------------------------------------------------------------
 var PLAYERS = {};
 var ROOMS = {};
-var playID = 0;
 var availableTiles = {
   "s1" : 4,
   "s2" : 4,
@@ -97,10 +96,10 @@ io.sockets.on('connection', function(socket){
       ROOMS[data.code] = Room;  //add room to list
       madeRoom = true;  //made room
     }
-
+    //notify client to redirect or display error
     socket.emit('roomCreated', {
       message: madeRoom
-    });   //notify client to redirect or display error
+    });   
   });
 
   /**
@@ -112,19 +111,19 @@ io.sockets.on('connection', function(socket){
     console.log("requested to join room: "+data.room);
     var mess = "";
     if(!ROOMS[data.room]){
-      mess = "room does not exist.";
-    }
-    else if(checkPlayer(data.room, data.name)){
-      mess = "player name is taken.";
+      mess = "Room does not exist.";
     }
     else if(ROOMS[data.room].players.length == 4){
-      mess = "room is full."
+      mess = "Room is full."
+    }
+    else if(checkPlayer(data.room, data.name)){
+      mess = "Player name is taken.";
     }
     else{
       mess = "good";
     }
-
-    socket.emit('joined', { message: mess });   //notify client to redirect or display error
+    //notify client to redirect or display error
+    socket.emit('joined', { message: mess });   
   });
 
   /**
@@ -133,7 +132,12 @@ io.sockets.on('connection', function(socket){
   */
   socket.on('newJoin', function(data){
     console.log("this is the socket id: " + socket.id);
-
+    if(!ROOMS[data.room]){
+      window.location.href = '/';
+    }
+    else if(checkPlayer(data.room, data.name)){
+      
+    }
     var Player = {};
     Player.id = socket.id;
     Player.name = data.name;

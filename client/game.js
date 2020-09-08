@@ -17,7 +17,7 @@ for(var item in params){
     }
 }
 
-document.getElementById('room').innerText += Room;    // display Room name
+document.getElementById('room').innerText += " " + Room;    // display Room name
 console.log("this is my ID: " + socket.id);
 
 // createS new player object
@@ -49,8 +49,8 @@ start.onclick = function(){
      */
     socket.on('start', function(data){
         if(data.message){
-            document.getElementById('waiting').style.display = "none";
-            document.getElementById('game').style.display = "block";
+            document.getElementById('waiting').classList.add('d-none');
+            document.getElementById('game').classList.remove('d-none');
 
             // deal the cards to everyone (13 tiles for everybody)
             socket.emit('deal', {
@@ -70,6 +70,7 @@ start.onclick = function(){
             });
         }
         else{
+            document.getElementById('err').innerHTML = "Cannot start without 4 players";
             console.log("error: cant start without 4.");
         }
     });
@@ -81,8 +82,8 @@ start.onclick = function(){
  */
 socket.on('start', function(data){
     if(data.message){
-        document.getElementById('waiting').style.display = "none";
-        document.getElementById('game').style.display = "block";
+      document.getElementById('waiting').classList.add('d-none');
+      document.getElementById('game').classList.remove('d-none');
     }
     else{
         console.log("error: cant start without 4.");
