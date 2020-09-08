@@ -111,31 +111,82 @@ Helper Functions
   - param: a (array) -- the list of tiles (string)
   - return: (boolean) -- true if each tile is identical, false if not
   - descr: checks to see if each tile in the array is consecutive within the same suite
-
-Note: room name and room code are synonymous 
+ 
+ #### Note:
+ Room name and room code are synonymous 
 
 ## Client
 ### join.js
+#### Fields
+- socket
 #### Functions
 Socket Functions
 - roomCreated -- within makeNew.onclick
+  - data: message (boolean) -- status on whether to create room or not
+  - descr: redirects to waiting room (game.html)
 - joined -- within joinRoom.onclick
+  - data: message (string) -- status on whether to join room or not
+  - descr: redirects to waiting room (game.html)
 
-HTML/JS Functions
+Event Functions
 - makeNew.onclick
   - descr: when a user clicks on the "new" button, create a new room (after doing error checking) via server and redirect page
   - call to server: createRoom
-  - roomCreated
-    - data: message (boolean) -- status on whether to create room or not
+  - socket function: roomCreated
+    
 - joinRoom.onclick
   - descr: when a user clicks the "join" button, join the specific room (after doing error checking) via server and redirect page
   - call to server: joinRoom
-  - joined
-    - data: message (string) -- status on whether to join room or not
+  - socket function: joined
+  
 
 ### games.js
 #### Fields
+- socket
+- room  -- room code
+- name  -- player's name
 
 #### Functions
+Socket Functions
+- start -- within start.onclick
+  - data: message (boolean) -- true to start game, false to display error
+  - descr: hide waiting area and display hiden game to proceed; also deals the tiles and the first player (player who clicked start) draws another tile
+  - call to server: deal, active true, draw
+- start 
+  - data: message (boolean) -- true to start game, false to display error
+  - descr: hide waiting area and display hiden game to proceed (for every other player who did not click start button)
+- newPlay
+  - data: players (array of strings) -- list of players associated with the room
+  - descr: displays players who have joined the game in the waiting list
+- player tiles
+  - data: tiles (array of strings) -- list of the player's tiles/hand
+  -descr: display the player's tiles/hand
+
+Event Functions
+- start.onclick
+  - descr: when someone clicks the start button...
+  - call to server: startGame
+  - socket function: start
+    - call to server: deal, active true, draw
+- leave.onclick
+  - descr: leave the room if the player clicks the "leave" button
+  - call to server: leave
+- draw.onclick
+  - descr: draw a tile
+  - call to server: draw
+- discard.onclick
+  - descr: discard tile based on tile id  -- NOTE, ANOTHER OPTION WE CAN DO IS REMOVE BASED ON INDEX
+  - call to server: discard, active switch
+- steal.onclick
+  - descr: steal the discarded tile
+  - call to server: steal, active switch steal
+- reveal.onclick
+  - descr: reveal the completed set due to stealing the discarded tile
+  - call to server: reveal
+- cancel.onclick
+- win.onclick
+
+### Note:
+games.js calls newJoin in the very beginning 
 
 ## Logic
