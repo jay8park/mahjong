@@ -2,9 +2,9 @@
 <insert description> 
 
 ## Server
-app.js
+### app.js
 
-### Objects
+#### Objects
 PLAYERS -- dictionary of player -- key: id (socket)
 
 ROOMS -- dictionary of room -- key: id (room code)
@@ -25,7 +25,7 @@ Room:
 - last -- string -- the last discarded tile -- NOTE, might not need, bc we could just pop out the last element of discard
 - steal -- boolean -- if false, no one is able to steal, if true, players may steal; note, normally set to false when a player is in turn (draws a tile/discarding tile, etc.)
 
-### Functions
+#### Functions
 on ('connection')
 - createRoom
   - data: code (string) -- room code (used as room id)
@@ -115,10 +115,10 @@ helper functions
 Note: room name and room code are synonymous 
 
 ## Client
-join.js
-### Fields
+### join.js
+#### Fields
 
-### Functions
+#### Functions
 
 games.js
 ### Fields
