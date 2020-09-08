@@ -111,6 +111,8 @@ Helper Functions
   - param: a (array) -- the list of tiles (string)
   - return: (boolean) -- true if each tile is identical, false if not
   - descr: checks to see if each tile in the array is consecutive within the same suite
+ - createRoom
+ - createPlayer
  
  #### Note:
  Room name and room code are synonymous 
