@@ -191,11 +191,18 @@ games.js calls newJoin in the very beginning
 
 ## Logic/Flow
 Home Page
-- Need to put down a name and room code
+- Note: need to put down a name and room code
 - If you click "Create Game"
+  - w/ a new game code
+  - w/ an existing game code
+  - w/out a game code or name
 - If you click "Join Game"
+  - w/ an existing game code and a unique name
 
 Waiting Room <br>
+- If you click "start" without 4 players
+- If you click "start" with 4 players
+
 Game Room
   
 Note: the waiting room and game room is the same html page
