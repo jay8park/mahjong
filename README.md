@@ -28,15 +28,34 @@ Room:
 ### Functions
 on ('connection')
 - createRoom
-  - param
-  - descr
-- roomCreated
+  - data: code (string) -- room code (used as room id)
+  - descr: creates a new room if the room (name/code) does not already exist
+  - call to client: roomCreated
 - joinROom
+  - data: room (string), name (string) -- room name and player name
+  - desc: lets players join an existing room, only if the player's name is not taken and the room is not full (and other error checks)
+  - call to client: joined
 - newJoin
+  - data: room (string), name (string) -- room name and player name
+  - descr: creates a player object and add to PLAYERS dictionary
+  - call to client: newPlay
 - startGame
+  - data: room (string) -- room name 
+  - descr: checks if there are 4 players and then starts game if true (call to client to tell client to move to the next page)
+  - call to client: start
 - disconnect
+  - data: N/A
+  - descr: remove player from ROOMS and PLAYERS if they disconnect
+  - call to client: newPLay
 - leave
+  - data: room (string), name( string) -- room name and player name
+  - descr: if the leave button is triggered, remove player from ROOMS and PLAYERS
+  - call to client: newPlay
+  
 - active true
+  - data: pID (string), name (string) -- player ID and player name
+  - descr: change player's active status to true
+  - call to client: N/A
 - active false
 - active switch
 - active swtich steal
@@ -53,6 +72,7 @@ helper functions
 - isIdentical
 - isConsecutive
 
+Note: room name and room code are synonymous 
 
 ## Client
 join.js
