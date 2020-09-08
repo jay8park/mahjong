@@ -1,5 +1,7 @@
 # mahjong
 
+## Server
+### Objects
 Players:
 - id (socket id)
 - name
@@ -12,3 +14,7 @@ Rooms:
 - tile list
 - discard
 - last (last discarded tile)
+
+### Functions
+
+## Client
