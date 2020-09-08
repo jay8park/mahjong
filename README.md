@@ -189,4 +189,13 @@ Event Functions
 ### Note:
 games.js calls newJoin in the very beginning 
 
-## Logic
+## Logic/Flow
+Home Page
+- Need to put down a name and room code
+- If you click "Create Game"
+- If you click "Join Game"
+
+Waiting Room <br>
+Game Room
+  
+Note: the waiting room and game room is the same html page
