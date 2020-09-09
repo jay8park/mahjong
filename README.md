@@ -196,8 +196,17 @@ Home Page
 - Note: need to put down a name and room code
 - If you click "Create Game"
   - w/ a new game code
+    1) client (join.js): makeNew.onclick()
+    2) server: createRoom -- data { message: true }
+    3) client (join.js): roomCreated  -- redirected to game.html
   - w/ an existing game code
-  - w/out a game code or name
+    1) client (join.js): makeNew.onclick()
+    2) server: createRoom -- data { message: false }
+    3) client (join.js): roomCreated  -- print error
+  - **w/out a game code or name     -- need to make sure that form needs to be filled
+    1) client (join.js): makeNew.onclick()
+    2) server: createRoom -- data { message: true }
+    3) client (join.js): roomCreated  -- empty query, but redirected
 - If you click "Join Game"
   - w/ an existing game code and a unique name
   - w/ an existing game code and a taken name
