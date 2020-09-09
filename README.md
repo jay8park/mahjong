@@ -230,11 +230,21 @@ Home Page
     3) client (join.js): joined   -- print error
   
 Waiting Room <br>
-- If you click "start" without 4 players
+- If you click "start" without 4 players 
+  - player who clicked
+  - players who didn't click
 - If you click "start" with 4 players
+  - player who clicked
+  - players who didn't click
 - If you click "leave"
+  - player who clicked
+  - players who didn't click
 - If you exit the page (disconnect)
+  - player who left
+  - players who didn't leave
 - If you refresh the page
+  - player who refreshed
+  - players who didn't refresh
 
 Game Room <br>
 - If you click "draw"
