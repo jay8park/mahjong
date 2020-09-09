@@ -198,21 +198,36 @@ Home Page
   - w/ a new game code
     1) client (join.js): makeNew.onclick()
     2) server: createRoom -- data { message: true }
-    3) client (join.js): roomCreated  -- redirected to game.html
+    3) client (join.js): roomCreated  -- redirect to game.html
   - w/ an existing game code
     1) client (join.js): makeNew.onclick()
     2) server: createRoom -- data { message: false }
     3) client (join.js): roomCreated  -- print error
-  - **w/out a game code or name     -- need to make sure that form needs to be filled
+  - **w/out a game code or name     -- need to make sure that form needs to be filled**
     1) client (join.js): makeNew.onclick()
     2) server: createRoom -- data { message: true }
     3) client (join.js): roomCreated  -- empty query, but redirected
 - If you click "Join Game"
   - w/ an existing game code and a unique name
+    1) client (join.js): joinRoom.onclick()
+    2) server: joinRoom -- data { message: good }
+    3) client (join.js): joined   -- redirect to game.html
   - w/ an existing game code and a taken name
+    1) client (join.js): joinRoom.onclick()
+    2) server: joinRoom -- data { message: player name is taken. }
+    3) client (join.js): joined   -- print error
   - w/ an existing game code, a unique name, and maxed out capacity
+    1) client (join.js): joinRoom.onclick()
+    2) server: joinRoom -- data { message: room is full. }
+    3) client (join.js): joined   -- print error
   - w/ a non-existing game code and a unique name
+    1) client (join.js): joinRoom.onclick()
+    2) server: joinRoom -- data { message: room does not exist. }
+    3) client (join.js): joined   -- print error
   - w/ a non-existing game code and a taken name
+    1) client (join.js): joinRoom.onclick()
+    2) server: joinRoom -- data { message: room does not exist. }
+    3) client (join.js): joined   -- print error
   
 Waiting Room <br>
 - If you click "start" without 4 players
