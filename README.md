@@ -19,11 +19,13 @@ Player:
 
 Room:
 - id -- string -- room code
-- players list -- list of strings -- list of the player's name
-- tile list -- list of strings -- the list of available tiles for this room
+- players -- list of strings -- list of the player's name
+- tiles -- list of strings -- the list of available tiles for this room
 - discard -- list of strings -- the list of dicarded tiles
 - last -- string -- the last discarded tile -- NOTE, might not need, bc we could just pop out the last element of discard
 - steal -- boolean -- if false, no one is able to steal, if true, players may steal; note, normally set to false when a player is in turn (draws a tile/discarding tile, etc.)
+- inplay -- boolean -- status of whether game has started (true) or whether still in waiting room (false) -- needed for the disconnect functionality
+- prevActive -- string -- the player id who was last previously active -- this is meant for the cancel functionality where we need to revert back to the original active player 
 
 #### Functions
 on ('connection')
@@ -47,11 +49,6 @@ on ('connection')
   - data: N/A
   - descr: remove player from ROOMS and PLAYERS if they disconnect
   - call to client: newPLay
-- leave
-  - data: room (string), name( string) -- room name and player name
-  - descr: if the leave button is triggered, remove player from ROOMS and PLAYERS
-  - call to client: newPlay
-  
 - active true
   - data: pID (string), name (string) -- player ID and player name
   - descr: change player's active status to true
@@ -91,6 +88,14 @@ on ('connection')
   - call to client: player tiles -- to the player via socket id
 
 Helper Functions
+ - createRoom
+  - param: r (string) -- room name
+  - return: {Object} -- Room 
+  - descr: creates a Room object and adds to the ROOMS dict 
+ - createPlayer
+  - param: p (string), s (string) -- player name and socket id
+  - return: {Object} -- Player 
+  - descr: creates a Player object and adds to the PLAYERS dict 
 - checkPlayer
   - param: r (string), n (string) -- room name and player name
   - return: boolean
@@ -111,8 +116,7 @@ Helper Functions
   - param: a (array) -- the list of tiles (string)
   - return: (boolean) -- true if each tile is identical, false if not
   - descr: checks to see if each tile in the array is consecutive within the same suite
- - createRoom
- - createPlayer
+
  
  #### Note:
  Room name and room code are synonymous 
@@ -135,12 +139,20 @@ Event Functions
   - descr: when a user clicks on the "new" button, create a new room (after doing error checking) via server and redirect page
   - call to server: createRoom
   - socket function: roomCreated
-    
 - joinRoom.onclick
   - descr: when a user clicks the "join" button, join the specific room (after doing error checking) via server and redirect page
   - call to server: joinRoom
   - socket function: joined
-  
+
+Helper Functions
+- displayError
+  - param: name (string), room (string) -- document element value of name and room
+  - return: boolean -- true if there is an error with the name and room input, false otherwise
+  - descr: display error message(s) if name or room code input is not filled
+- resetError
+  - param: N/A
+  - return: N/A
+  - descr: remove error message(s) for the name or room code input
 
 ### games.js
 #### Fields
@@ -158,11 +170,11 @@ Socket Functions
   - data: message (boolean) -- true to start game, false to display error
   - descr: hide waiting area and display hiden game to proceed (for every other player who did not click start button)
 - newPlay
-  - data: players (array of strings) -- list of players associated with the room
-  - descr: displays players who have joined the game in the waiting list
-- player tiles
-  - data: tiles (array of strings) -- list of the player's tiles/hand
-  -descr: display the player's tiles/hand
+  - data: players (array of strings), error (string) -- list of players associated with the room and error message
+  - descr: displays players who have joined the game in the waiting list or the error message
+- display  tiles
+  - data: tiles (array of strings), message (string) -- list/dict of the player's tiles/hand and the message/description of the tiles 
+  - descr: display the player's tiles/hand
 
 Event Functions
 - start.onclick
