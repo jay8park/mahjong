@@ -203,7 +203,7 @@ Home Page
     1) client (join.js): makeNew.onclick()
     2) server: createRoom -- data { message: false }
     3) client (join.js): roomCreated  -- print error
-  - **w/out a game code or name     -- need to make sure that form needs to be filled**
+  - w/out a game code or name     -- need to make sure that form needs to be filled
     1) client (join.js): makeNew.onclick()
     2) server: createRoom -- data { message: true }
     3) client (join.js): roomCreated  -- empty query, but redirected
