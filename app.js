@@ -32,43 +32,43 @@ console.log("Server started.");
 var PLAYERS = {};
 var ROOMS = {};
 var availableTiles = {
-  "s1" : 4,
-  "s2" : 4,
-  "s3" : 4,
-  "s4" : 4,
-  "s5" : 4,
-  "s6" : 4,
-  "s7" : 4,
-  "s8" : 4,
-  "s9" : 4,
+  "s1" : 0,
+  "s2" : 0,
+  "s3" : 0,
+  "s4" : 0,
+  "s5" : 0,
+  "s6" : 0,
+  "s7" : 0,
+  "s8" : 0,
+  "s9" : 0,
 
-  "c1" : 4,
-  "c2" : 4,
-  "c3" : 4,
-  "c4" : 4,
-  "c5" : 4,
-  "c6" : 4,
-  "c7" : 4,
-  "c8" : 4,
-  "c9" : 4,
+  "c1" : 0,
+  "c2" : 0,
+  "c3" : 0,
+  "c4" : 0,
+  "c5" : 0,
+  "c6" : 0,
+  "c7" : 0,
+  "c8" : 0,
+  "c9" : 0,
 
-  "b1" : 4,
-  "b2" : 4,
-  "b3" : 4,
-  "b4" : 4,
-  "b5" : 4,
-  "b6" : 4,
-  "b7" : 4,
-  "b8" : 4,
-  "b9" : 4,
+  "b1" : 0,
+  "b2" : 0,
+  "b3" : 0,
+  "b4" : 0,
+  "b5" : 0,
+  "b6" : 0,
+  "b7" : 0,
+  "b8" : 0,
+  "b9" : 0,
 
-  "north" : 4,
-  "east" : 4,
-  "south" : 4,
-  "west" : 4,
-  "money" : 4,
-  "blank" : 4,
-  "center" : 4,
+  "north" : 0,
+  "east" : 0,
+  "south" : 0,
+  "west" : 0,
+  "money" : 0,
+  "blank" : 0,
+  "center" : 0,
 };
 var tiles = ["s1", "s1", "s1", "s1", "s2", "s2", "s2", "s2", "s3", "s3", "s3", "s3", "s4", "s4", "s4", "s4", "s5", "s5", "s5", "s5", "s6", "s6", "s6", "s6", "s7", "s7", "s7", "s7", "s8", "s8", "s8", "s8", "s9", "s9", "s9", "s9", "c1", "c1", "c1", "c1", "c2", "c2", "c2", "c2", "c3", "c3", "c3", "c3", "c4", "c4", "c4", "c4", "c5", "c5", "c5", "c5", "c6", "c6", "c6", "c6", "c7", "c7", "c7", "c7", "c8", "c8", "c8", "c8", "c9", "c9", "c9", "c9", "b1", "b1", "b1", "b1", "b2", "b2", "b2", "b2", "b3", "b3", "b3", "b3", "b4", "b4", "b4", "b4", "b5", "b5", "b5", "b5", "b6", "b6", "b6", "b6", "b7", "b7", "b7", "b7", "b8", "b8", "b8", "b8", "b9", "b9", "b9", "b9", "north", "north", "north", "north", "east", "east", "east", "east", "south", "south", "south", "south", "west", "west", "west", "west", "money", "money", "money", "money", "blank", "blank", "blank", "blank", "center", "center", "center", "center"];
 
@@ -224,31 +224,6 @@ io.sockets.on('connection', function(socket){
     console.log("players: "+ JSON.stringify(PLAYERS));
   });
 
-  /**
-    * @desc if a player clicks the "leave" button to leave the game, remove player from ROOMS and PLAYERS
-    * @param data = {string: room}, {string: name} - room name and player name
-  */
-  // socket.on('leave', function(data){
-  //   console.log(data.name + " is requesting to leave");
-  //   // remove player from room
-  //   var removed = []
-  //   for (var i = 0; i < ROOMS[data.room].players.length; i++) {
-  //     if (ROOMS[data.room].players[i].name == data.name) {
-  //       removed = ROOMS[data.room].players.splice(i-1, 1);
-  //       break;
-  //     }
-  //   }
-  //   ROOMS[data.room].players = removed;
-
-  //   delete PLAYERS[socket.id];  // remove player from PLAYERS
-
-  //   socket.leave(data.room, function(){
-  //     io.to(data.room).emit('newPlay', {
-  //       players: ROOMS[data.room].players
-  //     });   // notify the room the updated players list
-  //   });   // leave/unsubscribe from room
-  // });
-
 
 
 
@@ -299,17 +274,17 @@ io.sockets.on('connection', function(socket){
     * @param data = {string: pID}, {string: room} - player ID and room name
   */
   socket.on('active switch steal', function(data){
-    // set the current active player's status to false
-    // also set the outOfTurn status
-    for (var p in ROOMS[data.room].players) {
-      if (ROOMS[data.room].players[p].active == true) {
-        if (ROOMS[data.room].players[p].id == data.pID) {   // check to see if the stealer stole in turn or not
-          ROOMS[data.room].players[p].outOfTurn = false;
-        }
-        else {
-          ROOMS[data.room].players[p].outOfTurn = true;
-        }
+    // set the outOfTurn status
+    if (PLAYERS[data.pID].active == true) {     // if player stole in turn, set outOfTurn to false
+      PLAYERS[data.pID].outOfTurn = false;
+    }
+    else {
+      PLAYERS[data.pID].outOfTurn = true;
+    }
 
+    // set the current active player's status to false
+    for (var p in ROOMS[data.room].players) {     // note, p is just the index, doesn't actually give us the player's name
+      if (ROOMS[data.room].players[p].active == true) {
         ROOMS[data.room].players[p].active = false;
         console.log("active status of " + ROOMS[data.room].players[p].name + " is now: " + ROOMS[data.room].players[p].active);
         break;
@@ -336,7 +311,8 @@ io.sockets.on('connection', function(socket){
       console.log(ROOMS[data.room].players[p].name + " has tiles: ");
       console.log(ROOMS[data.room].players[p].tiles);
 
-      io.to(ROOMS[data.room].players[p].id).emit('player tiles', {
+      io.to(ROOMS[data.room].players[p].id).emit('display tiles', {
+        message: "player tiles",
         tiles: ROOMS[data.room].players[p].tiles
       });   // return the list of tiles to each player's perspective screen
     }
@@ -357,7 +333,8 @@ io.sockets.on('connection', function(socket){
 
     console.log(data.name + ' is drawing ' + draw);
 
-    io.to(data.pID).emit('player tiles', {
+    io.to(data.pID).emit('display tiles', {
+      message: "player tiles",
       tiles: PLAYERS[data.pID].tiles
     });   // return the list of tiles to the player's screen
   });
@@ -373,7 +350,7 @@ io.sockets.on('connection', function(socket){
     for (var i = 0; i < PLAYERS[data.pID].tiles.length; i++) {
       if (PLAYERS[data.pID].tiles[i] == data.tile) {
         removed = PLAYERS[data.pID].tiles.splice(i, 1);   // remove tile from player's hand
-        ROOMS[data.room].discard.push(data.tile);     // add discarded tile into room's discard pile/list
+        ROOMS[data.room].discard[data.tile] += 1;     // add discarded tile into room's discard pile/list
         ROOMS[data.room].last = data.tile;      // set last discard tile
         break;
       }
@@ -381,7 +358,11 @@ io.sockets.on('connection', function(socket){
 
     ROOMS[data.room].steal = true; // players can now steal tiles from discard
 
-    io.to(data.pID).emit('player tiles', {
+    console.log("discard pile: ")
+    console.log(ROOMS[data.room].discard);
+
+    io.to(data.pID).emit('display tiles', {
+      message: "player tiles",
       tiles: PLAYERS[data.pID].tiles
     });   // return the list of tiles to the player's screen
   });
@@ -395,11 +376,12 @@ io.sockets.on('connection', function(socket){
 
     PLAYERS[data.pID].tiles.push(ROOMS[data.room].last);
     PLAYERS[data.pID].tiles.sort();
+    ROOMS[data.room].discard[ROOMS[data.room].last] -= 1;
     ROOMS[data.room].last = "";
-    ROOMS[data.room].discard.pop();
     ROOMS[data.room].steal = true; // players can now steal tiles from discard
 
-    io.to(data.pID).emit('player tiles', {
+    io.to(data.pID).emit('display tiles', {
+      message: "player tiles",
       tiles: PLAYERS[data.pID].tiles
     });   // return the list of tiles to the player's screen
   });
@@ -433,23 +415,32 @@ io.sockets.on('connection', function(socket){
     }
 
     if (completed) {
-      // remove tiles from hand and into revealed
-      // var removed = [];
-      // for (var i = 0; i < PLAYERS[data.pID].tiles.length; i++) {
-      //   if (PLAYERS[data.pID].tiles[i] == data.tile) {
-      //     removed = PLAYERS[data.pID].tiles.splice(i, 1);   // remove tile from player's hand
-      //     ROOMS[data.room].discard.push(data.tile);     // add discarded tile into room's discard pile/list
-      //     ROOMS[data.room].last = data.tile;      // set last discard tile
-      //     break;
-      //   }
-      // }
+      // remove tiles from hand
+      for (var i = 0; i < data.tiles.length; i++) {
+        for (var k = 0; k < PLAYERS[data.pID].tiles.length; k++) {
+          if (PLAYERS[data.pID].tiles[k] == data.tiles[i]) {
+            PLAYERS[data.pID].tiles.splice(k, 1);
+            break;   // break out of this inner loop, and continue with outer loop
+          }
+        }
+      }
+      PLAYERS[data.pID].revealed.push(data.tiles);    // add completed set list to revealed list
 
-      io.to(data.pID).emit('player tiles', {
+      io.to(data.pID).emit('display tiles', {
+        message: "player tiles",
         tiles: PLAYERS[data.pID].tiles
+      });   // return the list of tiles to the player's screen
+
+      io.to(data.pID).emit('display tiles', {
+        message: "revealed tiles",
+        tiles: PLAYERS[data.pID].revealed
       });   // return the list of tiles to the player's screen
     }
     else {
       console.log("cannot complete set");
+      io.to(data.pID).emit('player revealed tiles', {
+        message: "cannot complete set"
+      });   // print message on client side
     }
 
   });
@@ -471,7 +462,7 @@ function createRoom(r){
   Room.id = r;
   Room.players = [];
   Room.tiles = shuffle(tiles);
-  Room.discard = [];
+  Room.discard = Object.assign({}, availableTiles);
   Room.last = "";
   Room.steal = false;
   Room.inplay = false;
@@ -490,7 +481,7 @@ function createPlayer(p, s){
   Player.id = s;
   Player.name = p;
   Player.tiles = [];
-  Player.revealed = [];
+  Player.revealed = []; // list of list
   Player.active = false;
   PLAYERS[Player.id] = Player;
   return Player;

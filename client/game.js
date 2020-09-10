@@ -103,7 +103,7 @@ var leave = document.getElementById('leave');
  */
 leave.onclick = function() {
   console.log("leave");
-  window.location.href = "/";   // redirect to home page 
+  window.location.href = "/";   // redirect to home page
   //should call disconnect
 }
 
@@ -257,10 +257,20 @@ socket.on('newPlay', function(data){
 });
 
 /**
-  * @desc display player's tiles on console
-  * @param data = {Array: tiles} - list of the player's tiles (strings)
+  * @desc display tiles on console
+  * @param data = {string: message} - message on what type of tiles is sent, list of the tiles (strings)
+  * @param data - {Array: tiles} - list or dictionary of the tiles (strings)
+}
  */
-socket.on('player tiles', function(data){
-  console.log("player tiles");
+socket.on('display tiles', function(data){
+  console.log(data.message);
   console.log(data.tiles);
+})
+
+/**
+  * @desc display message on player's console
+  * @param data = {string: message} - message to print
+ */
+socket.on('message', function(data){
+  console.log(data.message);
 })
