@@ -16,6 +16,11 @@ makeNew.onclick = function(e){
     var name = document.getElementById("user").value;
     var code = document.getElementById("room").value;
 
+    resetError();   // reset error message if any exists
+    if (displayError(name, code)){      // display error if any
+      return;
+    }
+
     socket.emit('createRoom',{
       code: code
     });
@@ -47,6 +52,11 @@ joinRoom.onclick = function(e){
     var name = document.getElementById("user").value;
     var code = document.getElementById("room").value;
 
+    resetError();   // reset error message if any exists
+    if (displayError(name, code)){      // display error if any
+      return;
+    }
+
     socket.emit('joinRoom',{
       room: code,
       name: name
@@ -68,4 +78,46 @@ joinRoom.onclick = function(e){
         }
     });
 
+}
+
+
+// ----------------------------------------------------------------------------
+// HELPER FUNCTIONS
+// ----------------------------------------------------------------------------
+
+/**
+  * @desc display error message if name or room code is not filled
+  * @param {string} name -- player's name
+  * @param {string} room -- room code
+  * @return {boolean} -- true if there is an error, false if there is none
+ */
+function displayError(name, room) {
+  var error = false;
+  if (name == "" || name == null) {
+    document.getElementById("name-err").innerHTML = "Please enter a name.";
+    error = true;
+  }
+  if (room == "" || room == null) {
+    console.log("hello");
+    document.getElementById("room-err").innerHTML = "Please enter a room code.";
+    error = true;
+  }
+  if (error) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+/**
+  * @desc remove error message for "name-err" and "room-err" if there is any
+ */
+function resetError() {
+  if (document.getElementById("name-err").innerHTML != "") {
+    document.getElementById("name-err").innerHTML = "";
+  }
+  if (document.getElementById("room-err").innerHTML != "") {
+    document.getElementById("room-err").innerHTML = "";
+  }
 }
