@@ -102,13 +102,8 @@ var leave = document.getElementById('leave');
  */
 leave.onclick = function() {
   console.log("leave");
-
-  // leave/unsubscribe to room
-  // socket.emit('leave', {
-  //   room: Room,
-  //   name: Name
-  // });
-  window.location.href = "/";   // redirect to home page
+  window.location.href = "/";   // redirect to home page 
+  //should call disconnect
 }
 
 

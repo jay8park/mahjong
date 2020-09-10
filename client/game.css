@@ -1,6 +1,7 @@
 *{
     font-family: 'Abel';
 }
+/* ----------- waiting room -----------------*/
 #waiting{
     text-align: center;
 }
@@ -32,3 +33,158 @@
     font-size: 15px;
     color: red;
 }
+
+/* ----------- game board -----------------*/
+#game{
+    padding-left: 30px;
+    padding-right: 30px;
+    max-width: 3000px;
+}
+.container{
+    border-style: solid;
+    border-color: green;
+}
+/* -----sections of the page-----*/
+.other{
+    height: 85%;
+}
+.self{
+    height: 15%;
+    align-items: center;
+    margin-left: 15%;
+}
+.leftside, .rightside{
+    writing-mode:vertical-lr;
+}
+.westleft{
+    width: 30%;
+}
+/* -------left side----------*/
+.whand{
+    /* also serves the right side hand */
+    height: 50%;
+    width: 80%;
+    margin-top: 25%;
+    margin-left: 1%;
+    text-align: center;
+}
+#leftname{
+    margin-top: 5%;
+    transform: rotate(180deg);
+    font-weight: bold;
+    font-size: 150%;
+    margin-left: -5%;  /* might need some adjustment */
+}
+.westright{
+    height: 100%;
+    width: 60%;
+    margin-left: 5%;
+}
+.wrev{
+    /* also serves the right side rev */
+    height: 80%;
+    width: 90%;
+    margin-top: 10%;
+}
+.wrevtiles{ 
+    height: 15%;
+    transform: rotate(90deg);
+    margin-top: -4%;
+    background-image: url(img/background.png);
+    background-size: 100%;
+}
+/* -------right side----------*/
+.eastleft{
+    margin-right: 5%;
+    margin-left: 1%;
+    width: 60%;
+}
+.eastright{
+    width: 30%;
+}
+#rightname{
+    font-weight: bold;
+    font-size: 150%;
+    margin-left: -5%; /* might need some adjustment */
+} 
+.erevtiles{
+    height: 15%;
+    transform: rotate(-90deg);
+    margin-top: -4%;
+    background-image: url(img/background.png);
+    background-size: 100%;
+}
+/* --------top side----------*/
+.north{
+    height: 10%;
+}
+.nhand{
+    height: 80%;
+    width: 50%;
+    margin-top: 0.5%;
+    margin-left: 25%;
+    text-align: center;
+}
+#topname{
+    margin-top: 2%;
+    font-weight: bold;
+    font-size: 150%;
+}
+.nrev{
+    height: 80%;
+    width: 80%;
+}
+.nrevtiles{
+    height: 80%;
+    background-image: url(img/background.png);
+    background-size: 100%;
+    transform: rotate(180deg);
+}
+/* --------DISCARD----------*/
+.discard{
+    height: 50%;
+    overflow: auto;
+}
+.disc{
+    height: 25%;
+    margin-left: 2.8%;
+    background-image: url(img/background.png);
+    background-size: 100%;
+    opacity: 30%;
+}
+/* --------self stuff----------*/
+.rev{
+    height: 20%;
+}
+.srev{
+    height: 80%;
+    margin-top: 1%;
+}
+.srevtiles{
+    height: 80%;
+    background-image: url(img/background.png);
+    background-size: 100%;
+}
+.buttons{
+    align-items: center;
+    padding: 5%;
+    margin-top: 2%;
+}
+.btn-primary{
+    width: 70%;
+    margin-left: 25%;
+    margin-top: 5%;
+}
+.hand{
+    height: 80%;
+    background-image: url(img/background.png);
+}
+/* #c8{
+    border-style: solid;
+    opacity: 100%;
+    border-width: 1px;
+    border-color: red;
+} */
+/* .d-none{
+    position: absolute;
+} */

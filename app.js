@@ -171,19 +171,18 @@ io.sockets.on('connection', function(socket){
   socket.on('disconnect', function(){
     console.log("disconnect");
 
-    // remove player from room
     var room = "";
     var removed = [];
     var one = false;
     var index = -1;
+    // find the appropriate room and index and update
     for (var r in ROOMS) {
       for (var i = 0; i < ROOMS[r].players.length; i++) {
         if (ROOMS[r].players[i].id == socket.id) {
           if(ROOMS[r].inplay){
             console.log("return to home, but room still exists...");
             // --- currently crashes the game (take back to home screen)
-            // --- if someone leaves while the game is in play.
-            // --- but the room still exists....
+            // should disconnect all players from the game completely
             io.to(r).emit('newPlay', {
               error: "game in play."
             });
@@ -199,27 +198,26 @@ io.sockets.on('connection', function(socket){
           break;
         }
       }
+      // actually update the players array in ROOMS 
       if(index >= 0){
         removed = ROOMS[r].players.splice(index, 1);
-        console.log("removed: " + JSON.stringify(removed));
+        //console.log("removed: " + JSON.stringify(removed));
       }
       break;      
     }
-    // if room exists, update players in ROOMS and PLAYERS dict
+    // if room exists, delete ROOM if there was only one player
+    // notify the rest of the players in room tp update waiting room
     if (ROOMS[room]) {
-      console.log("current room: "+ JSON.stringify(ROOMS[room].players));
       if(one == true){
         delete ROOMS[room];
       }
       else{
-        //ROOMS[room].players = removed;
-        //   update the waiting room list
         io.to(room).emit('newPlay', {
           players: ROOMS[room].players
         });
-      }      
-      
+      } 
     }
+    // always delete player from PLAYER list
     delete PLAYERS[socket.id];
     console.log("rooms: "+ JSON.stringify(ROOMS));
     console.log("players: "+ JSON.stringify(PLAYERS));
@@ -229,26 +227,26 @@ io.sockets.on('connection', function(socket){
     * @desc if a player clicks the "leave" button to leave the game, remove player from ROOMS and PLAYERS
     * @param data = {string: room}, {string: name} - room name and player name
   */
-  socket.on('leave', function(data){
-    console.log(data.name + " is requesting to leave");
-    // remove player from room
-    var removed = []
-    for (var i = 0; i < ROOMS[data.room].players.length; i++) {
-      if (ROOMS[data.room].players[i].name == data.name) {
-        removed = ROOMS[data.room].players.splice(i-1, 1);
-        break;
-      }
-    }
-    ROOMS[data.room].players = removed;
+  // socket.on('leave', function(data){
+  //   console.log(data.name + " is requesting to leave");
+  //   // remove player from room
+  //   var removed = []
+  //   for (var i = 0; i < ROOMS[data.room].players.length; i++) {
+  //     if (ROOMS[data.room].players[i].name == data.name) {
+  //       removed = ROOMS[data.room].players.splice(i-1, 1);
+  //       break;
+  //     }
+  //   }
+  //   ROOMS[data.room].players = removed;
 
-    delete PLAYERS[socket.id];  // remove player from PLAYERS
+  //   delete PLAYERS[socket.id];  // remove player from PLAYERS
 
-    socket.leave(data.room, function(){
-      io.to(data.room).emit('newPlay', {
-        players: ROOMS[data.room].players
-      });   // notify the room the updated players list
-    });   // leave/unsubscribe from room
-  });
+  //   socket.leave(data.room, function(){
+  //     io.to(data.room).emit('newPlay', {
+  //       players: ROOMS[data.room].players
+  //     });   // notify the room the updated players list
+  //   });   // leave/unsubscribe from room
+  // });
 
 
 

@@ -17,6 +17,7 @@ body{
 } */
 .container{
     border-style: solid;
+    border-color: green;
 }
 .other{
     height: 85%;
@@ -35,8 +36,9 @@ body{
 .whand{
     height: 50%;
     width: 80%;
-    margin-top: 15%;
+    margin-top: 25%;
     margin-left: 1%;
+    text-align: center;
 }
 .westright{
     height: 100%;
@@ -63,7 +65,8 @@ body{
     height: 80%;
     width: 50%;
     margin-top: 0.5%;
-    margin-left: 5%;
+    margin-left: 25%;
+    text-align: center;
 }
 .nrev{
     height: 80%;
@@ -92,13 +95,19 @@ body{
 #west{
     margin-top: 5%;
     transform: rotate(180deg);
+    font-weight: bold;
+    font-size: 150%;
+    margin-left: -5%; /* might need some adjustment */
 }
 #east{
-    margin-top: 5%;
+    font-weight: bold;
+    font-size: 150%;
+    margin-left: -5%; /* might need some adjustment */
 }
 #north{
     margin-top: 2%;
-    margin-left: 20%;
+    font-weight: bold;
+    font-size: 150%;
 }
 .hand{
     height: 80%;
