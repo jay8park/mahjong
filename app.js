@@ -31,7 +31,6 @@ console.log("Server started.");
 // ----------------------------------------------------------------------------
 var PLAYERS = {};
 var ROOMS = {};
-var playID = 0;
 var availableTiles = {
   "s1" : 4,
   "s2" : 4,
@@ -86,21 +85,13 @@ io.sockets.on('connection', function(socket){
     var madeRoom = false;
 
     if(!ROOMS[data.code]){
-      var Room = {};
-      Room.id = data.code;
-      Room.players = [];
-      Room.tiles = shuffle(tiles);
-      Room.discard = [];
-      Room.last = "";
-      Room.steal = false;
-
-      ROOMS[data.code] = Room;  //add room to list
+      createRoom(data.code);
       madeRoom = true;  //made room
     }
-
+    //notify client to redirect or display error
     socket.emit('roomCreated', {
       message: madeRoom
-    });   //notify client to redirect or display error
+    });
   });
 
   /**
@@ -112,13 +103,13 @@ io.sockets.on('connection', function(socket){
     console.log("requested to join room: "+ data.room);
     var mess = "";
     if(!ROOMS[data.room]){
-      mess = "room does not exist.";
-    }
-    else if(checkPlayer(data.room, data.name)){
-      mess = "player name is taken.";
+      mess = "Room does not exist.";
     }
     else if(ROOMS[data.room].players.length == 4){
-      mess = "room is full."
+      mess = "Room is full."
+    }
+    else if(checkPlayer(data.room, data.name)){
+      mess = "Player name is taken.";
     }
     else{
       mess = "good";
@@ -135,23 +126,27 @@ io.sockets.on('connection', function(socket){
   */
   socket.on('newJoin', function(data){
     console.log("this is the socket id: " + socket.id);
-
-    var Player = {};
-    Player.id = socket.id;
-    Player.name = data.name;
-    Player.tiles = [];
-    Player.revealed = [];
-    Player.active = false;
-    Player.outOfTurn = false;
-
-    PLAYERS[Player.id] = Player;
-    ROOMS[data.room].players.push(Player);  //add Player and socket to room
-
-    socket.join(data.room, function(){
-      io.to(data.room).emit('newPlay', {
-        players: ROOMS[data.room].players
+    // this can be called by refreshing in waiting room, how handle edge cases
+    if(ROOMS[data.room] && checkPlayer(data.room, data.name)){
+      io.to(socket.id).emit('newPlay', {
+        error: "refresh"
       });
-    });   //notify the room
+    }
+    else{
+      if(!ROOMS[data.room]){
+        createRoom(data.room);
+      }
+      var player = createPlayer(data.name, socket.id);
+      ROOMS[data.room].players.push(player);  //add Player to room
+      console.log("created room: " + JSON.stringify(ROOMS[data.room]));
+      console.log("players: " + JSON.stringify(PLAYERS));
+      socket.join(data.room, function(){
+        io.to(data.room).emit('newPlay', {
+          players: ROOMS[data.room].players
+        });
+      });   //notify the room
+    }
+
   });
 
   /**
@@ -168,6 +163,7 @@ io.sockets.on('connection', function(socket){
     io.to(data.room).emit('start', {
       message: start
     }); //notify the room to start game
+    ROOMS[data.room].inplay = true;
   });
 
   /**
@@ -176,52 +172,82 @@ io.sockets.on('connection', function(socket){
   socket.on('disconnect', function(){
     console.log("disconnect");
 
-    // remove player from room
     var room = "";
     var removed = [];
+    var one = false;
+    var index = -1;
+    // find the appropriate room and index and update
     for (var r in ROOMS) {
       for (var i = 0; i < ROOMS[r].players.length; i++) {
         if (ROOMS[r].players[i].id == socket.id) {
+          if(ROOMS[r].inplay){
+            console.log("return to home, but room still exists...");
+            // --- currently crashes the game (take back to home screen)
+            // should disconnect all players from the game completely
+            io.to(r).emit('newPlay', {
+              error: "game in play."
+            });
+          }
           room = r;
-          removed = ROOMS[r].players.splice(i-1, 1);
+          if(ROOMS[r].players.length == 1){
+            //special case of one player in room
+            one = true;
+            console.log("special case called.");
+            break;
+          }
+          index = i;
           break;
         }
       }
+      // actually update the players array in ROOMS
+      if(index >= 0){
+        removed = ROOMS[r].players.splice(index, 1);
+        //console.log("removed: " + JSON.stringify(removed));
+      }
+      break;
     }
-    // if room exists, update players in ROOMS and PLAYERS dict
+    // if room exists, delete ROOM if there was only one player
+    // notify the rest of the players in room tp update waiting room
     if (ROOMS[room]) {
-      ROOMS[room].players = removed;
-      delete PLAYERS[socket.id];
-      io.to(room).emit('newPlay', {
-        players: ROOMS[room].players
-      });
+      if(one == true){
+        delete ROOMS[room];
+      }
+      else{
+        io.to(room).emit('newPlay', {
+          players: ROOMS[room].players
+        });
+      }
     }
+    // always delete player from PLAYER list
+    delete PLAYERS[socket.id];
+    console.log("rooms: "+ JSON.stringify(ROOMS));
+    console.log("players: "+ JSON.stringify(PLAYERS));
   });
 
   /**
     * @desc if a player clicks the "leave" button to leave the game, remove player from ROOMS and PLAYERS
     * @param data = {string: room}, {string: name} - room name and player name
   */
-  socket.on('leave', function(data){
-    console.log(data.name + " is requesting to leave");
-    // remove player from room
-    var removed = []
-    for (var i = 0; i < ROOMS[data.room].players.length; i++) {
-      if (ROOMS[data.room].players[i].name == data.name) {
-        removed = ROOMS[data.room].players.splice(i-1, 1);
-        break;
-      }
-    }
-    ROOMS[data.room].players = removed;
+  // socket.on('leave', function(data){
+  //   console.log(data.name + " is requesting to leave");
+  //   // remove player from room
+  //   var removed = []
+  //   for (var i = 0; i < ROOMS[data.room].players.length; i++) {
+  //     if (ROOMS[data.room].players[i].name == data.name) {
+  //       removed = ROOMS[data.room].players.splice(i-1, 1);
+  //       break;
+  //     }
+  //   }
+  //   ROOMS[data.room].players = removed;
 
-    delete PLAYERS[socket.id];  // remove player from PLAYERS
+  //   delete PLAYERS[socket.id];  // remove player from PLAYERS
 
-    socket.leave(data.room, function(){
-      io.to(data.room).emit('newPlay', {
-        players: ROOMS[data.room].players
-      });   // notify the room the updated players list
-    });   // leave/unsubscribe from room
-  });
+  //   socket.leave(data.room, function(){
+  //     io.to(data.room).emit('newPlay', {
+  //       players: ROOMS[data.room].players
+  //     });   // notify the room the updated players list
+  //   });   // leave/unsubscribe from room
+  // });
 
 
 
@@ -434,6 +460,42 @@ io.sockets.on('connection', function(socket){
 // ----------------------------------------------------------------------------
 // HELPER FUNCTIONS
 // ----------------------------------------------------------------------------
+
+/**
+  * @desc creates a Room object and adds to the ROOMS list
+  * @param {string} r - the room name
+  * @return {Object} - the Room
+ */
+function createRoom(r){
+  var Room = {};
+  Room.id = r;
+  Room.players = [];
+  Room.tiles = shuffle(tiles);
+  Room.discard = [];
+  Room.last = "";
+  Room.steal = false;
+  Room.inplay = false;
+  ROOMS[r] = Room;  //add room to list
+  return Room;
+}
+
+/**
+  * @desc creates a Player object and adds to the PLAYERS list
+  * @param {string} p - the player name
+  * @param {string} s - socket id
+  * @return {Object} - the Player
+ */
+function createPlayer(p, s){
+  var Player = {};
+  Player.id = s;
+  Player.name = p;
+  Player.tiles = [];
+  Player.revealed = [];
+  Player.active = false;
+  PLAYERS[Player.id] = Player;
+  return Player;
+}
+
 
 /**
   * @desc checks if the player's name already exists in the room

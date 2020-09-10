@@ -12,10 +12,15 @@ h1 {
     margin-top: 30px;
 }
 .ins{
-    width: 50%;
     box-shadow: 5px 5px;
+    width: 50%;
 }
-
+.error{
+    margin-top: 5px;
+    margin-left: 5px;
+    font-size: 15px;
+    color: red;
+}
 #form{
     margin-left: 25%;
     margin-top: 20px;

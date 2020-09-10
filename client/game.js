@@ -17,7 +17,7 @@ for(var item in params){
     }
 }
 
-document.getElementById('room').innerText += Room;    // display Room name
+document.getElementById('room').innerText += " " + Room;    // display Room name
 console.log("this is my ID: " + socket.id);
 
 // createS new player object
@@ -50,8 +50,8 @@ start.onclick = function(){
      */
     socket.on('start', function(data){
         if(data.message){
-            document.getElementById('waiting').style.display = "none";
-            document.getElementById('game').style.display = "block";
+            document.getElementById('waiting').classList.add('d-none');
+            document.getElementById('game').classList.remove('d-none');
 
             // deal the cards to everyone (13 tiles for everybody)
             socket.emit('deal', {
@@ -71,6 +71,7 @@ start.onclick = function(){
             });
         }
         else{
+            document.getElementById('err').innerHTML = "Cannot start without 4 players";
             console.log("error: cant start without 4.");
         }
     });
@@ -82,8 +83,8 @@ start.onclick = function(){
  */
 socket.on('start', function(data){
     if(data.message){
-        document.getElementById('waiting').style.display = "none";
-        document.getElementById('game').style.display = "block";
+      document.getElementById('waiting').classList.add('d-none');
+      document.getElementById('game').classList.remove('d-none');
     }
     else{
         console.log("error: cant start without 4.");
@@ -102,13 +103,8 @@ var leave = document.getElementById('leave');
  */
 leave.onclick = function() {
   console.log("leave");
-
-  // leave/unsubscribe to room
-  socket.emit('leave', {
-    room: Room,
-    name: Name
-  });
-  window.location.href = "/";   // redirect to home page
+  window.location.href = "/";   // redirect to home page 
+  //should call disconnect
 }
 
 
@@ -244,16 +240,20 @@ reveal.onclick = function() {
 /**
   * @desc display players who have joined the game (waiting list)
   * @param data = {Array: players} - list of players associated with the room
+  * @param data = {String: error} - error message
  */
 socket.on('newPlay', function(data){
-    console.log("received emission");
+  if(data.error){
+    window.location.href = "/";
+  }
+  console.log("received emission");
 
-    var html = "";
-    var list = data.players;
-    for(var p in list){
-        html += "<li class='list-group-item'>"+list[p].name+"</li>";
-    }
-    document.getElementById('players').innerHTML = html;
+  var html = "";
+  var list = data.players;
+  for(var p in list){
+      html += "<li class='list-group-item'>"+list[p].name+"</li>";
+  }
+  document.getElementById('players').innerHTML = html;
 });
 
 /**

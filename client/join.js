@@ -29,7 +29,7 @@ makeNew.onclick = function(e){
             window.location.href = "/game?room=" + code + "&name=" + name;
         }
         else{
-            console.log("error: room already exists");
+            document.getElementById("room-err").innerHTML = "This room already exists.";
         }
     });
 }
@@ -60,8 +60,11 @@ joinRoom.onclick = function(e){
         if(data.message == "good"){
             window.location.href = "/game?room=" + code + "&name=" + name;
         }
+        else if(data.message.includes('Room')){
+            document.getElementById("room-err").innerHTML = data.message;
+        }
         else{
-            console.log("error: " + data.message);
+            document.getElementById("name-err").innerHTML = data.message;
         }
     });
 
