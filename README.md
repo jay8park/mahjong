@@ -295,6 +295,6 @@ on reveal
 
 
 on cancel
-- <change active status>
+- **change active status**
 - draw 
 - steal
