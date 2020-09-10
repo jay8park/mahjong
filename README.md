@@ -278,22 +278,22 @@ default buttons:
 - draw
 - steal
 
-<br>
+
 on draw
 - discard
 - win
 
-<br>
+
 on steal
 - reveal
 - cancel
 
-<br>
+
 on reveal
 - discard
 - win
 
-<br>
+
 on cancel
 - <change active status>
 - draw 
