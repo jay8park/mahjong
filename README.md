@@ -265,3 +265,6 @@ Game Room <br>
 - If you leave the page (disconnect)
   
 Note: the waiting room and game room is the same html page
+
+
+players: -- person who clicks start goes first. player order: in order of who entered the room
