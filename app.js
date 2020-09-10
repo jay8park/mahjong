@@ -161,7 +161,8 @@ io.sockets.on('connection', function(socket){
       start = true;
     }
     io.to(data.room).emit('start', {
-      message: start
+      message: start,
+      players: ROOMS[data.room].players
     }); //notify the room to start game
     ROOMS[data.room].inplay = true;
   });
@@ -332,12 +333,15 @@ io.sockets.on('connection', function(socket){
 
     for (var p in ROOMS[data.room].players) {
       ROOMS[data.room].players[p].tiles = deal(ROOMS[data.room].tiles).sort();   // deal 13 for each player
+      // console.log(p);
+      // console.log(deal(ROOMS[data.room].tiles));
 
       console.log(ROOMS[data.room].players[p].name + " has tiles: ");
       console.log(ROOMS[data.room].players[p].tiles);
 
       io.to(ROOMS[data.room].players[p].id).emit('player tiles', {
-        tiles: ROOMS[data.room].players[p].tiles
+        tiles: ROOMS[data.room].players[p].tiles,
+        message: "deal"
       });   // return the list of tiles to each player's perspective screen
     }
   });
@@ -358,7 +362,8 @@ io.sockets.on('connection', function(socket){
     console.log(data.name + ' is drawing ' + draw);
 
     io.to(data.pID).emit('player tiles', {
-      tiles: PLAYERS[data.pID].tiles
+      tiles: PLAYERS[data.pID].tiles,
+      message: "draw"
     });   // return the list of tiles to the player's screen
   });
 
@@ -382,7 +387,8 @@ io.sockets.on('connection', function(socket){
     ROOMS[data.room].steal = true; // players can now steal tiles from discard
 
     io.to(data.pID).emit('player tiles', {
-      tiles: PLAYERS[data.pID].tiles
+      tiles: PLAYERS[data.pID].tiles,
+      message: "discard"
     });   // return the list of tiles to the player's screen
   });
 
@@ -400,7 +406,8 @@ io.sockets.on('connection', function(socket){
     ROOMS[data.room].steal = true; // players can now steal tiles from discard
 
     io.to(data.pID).emit('player tiles', {
-      tiles: PLAYERS[data.pID].tiles
+      tiles: PLAYERS[data.pID].tiles,
+      message: "steal"
     });   // return the list of tiles to the player's screen
   });
 
@@ -445,7 +452,8 @@ io.sockets.on('connection', function(socket){
       // }
 
       io.to(data.pID).emit('player tiles', {
-        tiles: PLAYERS[data.pID].tiles
+        tiles: PLAYERS[data.pID].tiles,
+        message: "reveal"
       });   // return the list of tiles to the player's screen
     }
     else {
@@ -470,11 +478,12 @@ function createRoom(r){
   var Room = {};
   Room.id = r;
   Room.players = [];
-  Room.tiles = shuffle(tiles);
   Room.discard = [];
   Room.last = "";
   Room.steal = false;
   Room.inplay = false;
+  tilesCopy = [...tiles];
+  Room.tiles = shuffle(tilesCopy);
   ROOMS[r] = Room;  //add room to list
   return Room;
 }

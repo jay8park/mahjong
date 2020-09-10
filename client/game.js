@@ -44,15 +44,11 @@ start.onclick = function(){
     });
 
     /**
-      * @desc display hidden and proceed to game
-      * Also deals the tiles and the first player (player who clicked start) draws another tile
+      * @desc things we want to happen once when game starts, only gets called with the one who clicked start
       * @param data = {boolean: message} - a boolean that tells us whether the server is ready to start the game
      */
     socket.on('start', function(data){
         if(data.message){
-            document.getElementById('waiting').classList.add('d-none');
-            document.getElementById('game').classList.remove('d-none');
-
             // deal the cards to everyone (13 tiles for everybody)
             socket.emit('deal', {
               room: Room
@@ -72,17 +68,27 @@ start.onclick = function(){
         }
         else{
             document.getElementById('err').innerHTML = "Cannot start without 4 players";
-            console.log("error: cant start without 4.");
         }
     });
 }
 
 /**
-  * @desc for players who didn't click start, display hidden and proceed to game
-  * @param data = {boolean: message} - a boolean that tells us whether the server is ready to start the game
+  * @desc for functions to happen to all players when game starts, display hidden and proceed to game
+  * @param data = {boolean: message, Array: players} - a boolean that tells us whether the server is ready to start the game
  */
 socket.on('start', function(data){
     if(data.message){
+      // set the names for each player
+      var index = data.players.findIndex(x => x.name === Name);
+      console.log("index: " + index);
+      var left = data.players[(index+1)%4].name;
+      var top = data.players[(index+2)%4].name;
+      var right = data.players[(index+3)%4].name;
+      document.getElementById('topname').innerText = top;
+      document.getElementById('leftname').innerText = left;
+      document.getElementById('rightname').innerText = right;
+
+      // hide the waiting room
       document.getElementById('waiting').classList.add('d-none');
       document.getElementById('game').classList.remove('d-none');
     }
@@ -257,10 +263,18 @@ socket.on('newPlay', function(data){
 });
 
 /**
-  * @desc display player's tiles on console
-  * @param data = {Array: tiles} - list of the player's tiles (strings)
+  * @desc display player's tiles
+  * @param data = {Array: tiles, String: message} - 
+  *   list of the player's tiles (strings) and function called to change the tiles (e.g. deal, discard, etc)
  */
 socket.on('player tiles', function(data){
-  console.log("player tiles");
+  console.log("message: " + data.message);
+  if(data.message == "deal"){
+    for(var t in data.tiles){
+      document.getElementById("hand").innerHTML += 
+      "<img class='hand' src='/client/img/" + data.tiles[t] + ".svg'>"
+    }
+  }
+  
   console.log(data.tiles);
 })
