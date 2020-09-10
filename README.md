@@ -271,3 +271,30 @@ players: -- person who clicks start goes first. player order: in order of who en
 
 <br>
 how do turns work?
+
+
+<br>
+default buttons:
+- draw
+- steal
+
+<br>
+on draw
+- discard
+- win
+
+<br>
+on steal
+- reveal
+- cancel
+
+<br>
+on reveal
+- discard
+- win
+
+<br>
+on cancel
+- <change active status>
+- draw 
+- steal
