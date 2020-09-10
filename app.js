@@ -109,7 +109,7 @@ io.sockets.on('connection', function(socket){
     * @param data = {string: room}, {string: name} - room name and player name
   */
   socket.on('joinRoom', function(data){
-    console.log("requested to join room: "+data.room);
+    console.log("requested to join room: "+ data.room);
     var mess = "";
     if(!ROOMS[data.room]){
       mess = "room does not exist.";
@@ -124,7 +124,9 @@ io.sockets.on('connection', function(socket){
       mess = "good";
     }
 
-    socket.emit('joined', { message: mess });   //notify client to redirect or display error
+    socket.emit('joined', {
+      message: mess
+    });   //notify client to redirect or display error
   });
 
   /**
@@ -140,6 +142,7 @@ io.sockets.on('connection', function(socket){
     Player.tiles = [];
     Player.revealed = [];
     Player.active = false;
+    Player.outOfTurn = false;
 
     PLAYERS[Player.id] = Player;
     ROOMS[data.room].players.push(Player);  //add Player and socket to room
@@ -152,9 +155,8 @@ io.sockets.on('connection', function(socket){
   });
 
   /**
-    * @desc players can join an existing room
-    * also checks for existing name, if the room is full, and other error checks
-    * @param data = {string: room}, {string: name} - room name and player name
+    * @desc checks requirements to start game, and starts game
+    * @param data = {string: room} - room name
   */
   socket.on('startGame', function(data){
     //data = {room: ___}
@@ -251,7 +253,7 @@ io.sockets.on('connection', function(socket){
     var index = 0;
     for (var p in ROOMS[data.room].players) {
       if (ROOMS[data.room].players[p].id == data.pID) {   // find the current player's index in order to get the next player's index
-        index = parseInt(p);
+        index = p;
         break;
       }
     }
@@ -267,13 +269,21 @@ io.sockets.on('connection', function(socket){
   });
 
   /**
-    * @desc change player's active status to false and the next player's active status to true if the status changes bc of a steal
+    * @desc change current player's active status to false and the active status of the player who stole to true
     * @param data = {string: pID}, {string: room} - player ID and room name
   */
   socket.on('active switch steal', function(data){
     // set the current active player's status to false
+    // also set the outOfTurn status
     for (var p in ROOMS[data.room].players) {
       if (ROOMS[data.room].players[p].active == true) {
+        if (ROOMS[data.room].players[p].id == data.pID) {   // check to see if the stealer stole in turn or not
+          ROOMS[data.room].players[p].outOfTurn = false;
+        }
+        else {
+          ROOMS[data.room].players[p].outOfTurn = true;
+        }
+
         ROOMS[data.room].players[p].active = false;
         console.log("active status of " + ROOMS[data.room].players[p].name + " is now: " + ROOMS[data.room].players[p].active);
         break;
@@ -295,7 +305,7 @@ io.sockets.on('connection', function(socket){
     console.log("dealing...");
 
     for (var p in ROOMS[data.room].players) {
-      ROOMS[data.room].players[p].tiles = deal(ROOMS[data.room].tiles);   // deal 13 for each player
+      ROOMS[data.room].players[p].tiles = deal(ROOMS[data.room].tiles).sort();   // deal 13 for each player
 
       console.log(ROOMS[data.room].players[p].name + " has tiles: ");
       console.log(ROOMS[data.room].players[p].tiles);
@@ -317,6 +327,7 @@ io.sockets.on('connection', function(socket){
     ROOMS[data.room].steal = false;     // players cannot steal tiles from discard when active player draws a tile
     var draw = ROOMS[data.room].tiles.shift();
     PLAYERS[data.pID].tiles.push(draw);
+    PLAYERS[data.pID].tiles.sort();
 
     console.log(data.name + ' is drawing ' + draw);
 
@@ -357,6 +368,7 @@ io.sockets.on('connection', function(socket){
     console.log(data.name + " is stealing discarded tile: " + ROOMS[data.room].last);
 
     PLAYERS[data.pID].tiles.push(ROOMS[data.room].last);
+    PLAYERS[data.pID].tiles.sort();
     ROOMS[data.room].last = "";
     ROOMS[data.room].discard.pop();
     ROOMS[data.room].steal = true; // players can now steal tiles from discard
@@ -368,20 +380,53 @@ io.sockets.on('connection', function(socket){
 
   /**
     * @desc reveal completed set
-    * @param data = {string: pID}, {string: name}, {string: room} - player ID, player name, and room name
+    * @param data = {string: pID}, {string: name}, {string: room}, {Array: tiles} - player ID, player name, room name, array of tiles to reveal (string)
   */
-  // socket.on('reveal', function(data){
-  //   console.log(data.name + " is stealing discarded tile: " + ROOMS[data.room].last);
-  //
-  //   PLAYERS[data.pID].tiles.push(ROOMS[data.room].last);
-  //   ROOMS[data.room].last = "";
-  //   ROOMS[data.room].discard.pop();
-  //   ROOMS[data.room].steal = true; // players can now steal tiles from discard
-  //
-  //   io.to(data.pID).emit('player tiles', {
-  //     tiles: PLAYERS[data.pID].tiles
-  //   });   // return the list of tiles to the player's screen
-  // });
+  socket.on('reveal', function(data){
+    console.log(data.name + " is revealing");
+
+    // check if its a completed set
+    var completed = false;
+    var identical = isIdentical(data.tiles)
+
+    if (data.tiles.length == 3) {
+      // if the player stole out of turn, completed set must be identical
+      if (PLAYERS[data.pID].outOfTurn && identical) {
+        console.log("ITS IDENTICAL");
+        completed = true;
+      }
+      // if player stole within turn, completed set can be identical or consecutive
+      else if (!PLAYERS[data.pID].outOfTurn && (identical || isConsecutive(data.tiles))) {
+        console.log("IN TURN, & ITS CONSECUTIVE OR IDENTICAL");
+        completed = true;
+      }
+    }
+    // if there are 4 tiles, all needs to be identical to be a completed set
+    if (data.tiles.length == 4 && identical) {
+      completed  = true;
+    }
+
+    if (completed) {
+      // remove tiles from hand and into revealed
+      // var removed = [];
+      // for (var i = 0; i < PLAYERS[data.pID].tiles.length; i++) {
+      //   if (PLAYERS[data.pID].tiles[i] == data.tile) {
+      //     removed = PLAYERS[data.pID].tiles.splice(i, 1);   // remove tile from player's hand
+      //     ROOMS[data.room].discard.push(data.tile);     // add discarded tile into room's discard pile/list
+      //     ROOMS[data.room].last = data.tile;      // set last discard tile
+      //     break;
+      //   }
+      // }
+
+      io.to(data.pID).emit('player tiles', {
+        tiles: PLAYERS[data.pID].tiles
+      });   // return the list of tiles to the player's screen
+    }
+    else {
+      console.log("cannot complete set");
+    }
+
+  });
 
 });
 
@@ -412,25 +457,65 @@ function checkPlayer(r, n){
    * @return {Array} a - the shuffled array
   */
 function shuffle(a) {
-    var j, x, i;
-    for (i = a.length - 1; i > 0; i--) {
-        j = Math.floor(Math.random() * (i + 1));
-        x = a[i];
-        a[i] = a[j];
-        a[j] = x;
-    }
-    return a;
+  var j, x, i;
+  for (i = a.length - 1; i > 0; i--) {
+    j = Math.floor(Math.random() * (i + 1));
+    x = a[i];
+    a[i] = a[j];
+    a[j] = x;
+  }
+  return a;
 }
 
 /**
   * @desc deals 13 tiles (take out 13 items from the top of the list/array)
-  * @param {Array} a - the list of tiles to be dealt
+  * @param {Array} a - the list of tiles (string) to be dealt
   * @return {Array} - list of the 13 tiles
  */
 function deal(a) {
-    var hand = []
-    for (var i = 0; i < 13; i++) {
-      hand.push(a.shift());
+  var hand = []
+  for (var i = 0; i < 13; i++) {
+    hand.push(a.shift());
+  }
+  return hand;
+}
+
+/**
+  * @desc checks to see if each tile in the array is identical
+  * @param {Array} a - the list of tiles (string)
+  * @return {boolean} - true if each tile is identical; if not, false
+ */
+function isIdentical(a) {
+  for (var i = 1; i < a.length; i++) {
+    if (a[i] != a[0]) {       // check against the first tile
+      return false;
     }
-    return hand;
+  }
+  return true;
+}
+
+/**
+  * @desc checks to see if each tile in the array is consecutive (within the same suite)
+  * @param {Array} a - the list of tiles (string)
+  * @return {Array} - true if consecutive, false otherwise
+ */
+function isConsecutive(a) {
+  a.sort();
+  var suite = a[0].charAt(0);
+  for (var i = 0; i < a.length-1; i++) {
+    // check if its a special character tile (return false)
+    if (a[i].length != 2) {
+      return false;
+    }
+    // check suite
+    if (a[i].charAt(0) != suite) {
+      return false;
+    }
+    // check consecutive numbers
+    if (parseInt(a[i+1].charAt(1)) - parseInt(a[i].charAt(1)) != 1) {
+      return false;
+    }
+
+  }
+  return true;
 }

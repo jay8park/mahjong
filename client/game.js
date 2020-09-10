@@ -45,6 +45,7 @@ start.onclick = function(){
 
     /**
       * @desc display hidden and proceed to game
+      * Also deals the tiles and the first player (player who clicked start) draws another tile
       * @param data = {boolean: message} - a boolean that tells us whether the server is ready to start the game
      */
     socket.on('start', function(data){
@@ -192,33 +193,35 @@ steal.onclick = function() {
 // ----------------------------------------------------------------------------
 // REVEAL BUTTON
 // ----------------------------------------------------------------------------
-// var reveal = document.getElementById('reveal');
-//
-// /**
-//   * @desc reveal the completed set due to the stolen tile
-//  */
-// reveal.onclick = function() {
-//   console.log("revealing");
-//
-//   var tiles = document.getElementById('tile').value.split(',');
-//
-//   call server
-//   socket.emit('reveal', {
-//     pID: socket.id,
-//     name: Name,
-//     room: Room,
-//     tiles: tiles
-//   });
-//   // // request the server side to change the status of the player (who stole) as active
-//   // socket.emit('active switch steal', {
-//   //   pID: socket.id,
-//   //   room: Room
-//   // });
-//
-//   // enable discard button
-//   var discard = document.getElementById('discard');
-//   discard.disable = false;
-// }
+var reveal = document.getElementById('reveal');
+
+/**
+  * @desc reveal the completed set due to stealing the discarded tile
+  * NOTE, ANOTHER OPTION WE CAN DO IS BY INDEX RATHER THAN THE STRING OF THE TILE
+ */
+reveal.onclick = function() {
+  console.log("revealing");
+
+  var tiles = document.getElementById('tile').value.split(',');
+
+  // set needs to be a size of 3 or greater
+  if (tiles.length < 3) {
+    console.log("not enough tiles to complete a set");
+    return;
+  }
+
+  // call server
+  socket.emit('reveal', {
+    pID: socket.id,
+    name: Name,
+    room: Room,
+    tiles: tiles
+  });
+
+  // enable discard button
+  var discard = document.getElementById('discard');
+  discard.disable = false;
+}
 
 
 // ----------------------------------------------------------------------------
@@ -255,7 +258,7 @@ socket.on('newPlay', function(data){
 
 /**
   * @desc display player's tiles on console
-  * @param data = {string: tiles} - list of the player's tiles
+  * @param data = {Array: tiles} - list of the player's tiles (strings)
  */
 socket.on('player tiles', function(data){
   console.log("player tiles");
