@@ -12,7 +12,7 @@
     <p class="error" id="err"></p>
     <input class="btn btn-secondary" type="button" id="start" value="Start Game">
     <input class="btn btn-secondary" type="button" id="leave" value="Leave">
-    
+
 </div>
 
 <div id="game" class='d-none'>
@@ -116,7 +116,7 @@
             <div class='row eastright'>
                 <div class="container whand">
                     <h1 id='rightname'>EAST</h1>
-                </div>  
+                </div>
             </div>
         </div>
     </div>
@@ -136,7 +136,19 @@
         <input class='btn btn-secondary' id="cancel" type="button" value="Cancel">
         <input class='btn btn-secondary' id="reveal" type="button" value="Reveal">
         <input class='btn btn-secondary' id="win" type="button" value="Win">
+        <input class='btn btn-secondary' id="reject" type="button" value="Reject">
+        <input class='btn btn-secondary' id="accept" type="button" value="Accept">
     </form>
+</div>
+
+<div id="finished" class='d-none'>
+    <h3 id="room2">Room Code: </h3>
+    <h3 id="winner">Winner:  </h3>
+    <br>
+    <p class="error" id="err"></p>
+    <input class="btn btn-secondary" type="button" id="again" value="Play Again">
+    <input class="btn btn-secondary" type="button" id="leave" onclick="window.location.href = '/'" value="Leave">
+
 </div>
 
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>

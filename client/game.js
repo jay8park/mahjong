@@ -9,6 +9,7 @@ var Players = []; // list of names of other players in the same room; order is [
 var State = "Waiting" // state of current player to determine which buttons are active; 
 // Waiting, InTurn, Discard, Reveal, Four, MeWin, TheyWin -- see setButtons(s)
 var Tiles = [];
+var Winner = "";
 
 //getting URL query data
 var search = window.location.search.substring(1);
@@ -33,6 +34,10 @@ socket.emit('newJoin', {
 });
 
 
+// socket. emit('active') {
+  // room: Room
+// }
+
 // ----------------------------------------------------------------------------
 // START BUTTON
 // ----------------------------------------------------------------------------
@@ -45,6 +50,7 @@ var start = document.getElementById('start');
 start.onclick = function(){
     console.log("start");   // displayed only to the one who clicked it
 
+    Active = Name;
     socket.emit('startGame', {
       room: Room
     });
@@ -126,7 +132,7 @@ var leave = document.getElementById('leave');
  */
 leave.onclick = function() {
   console.log("leave");
-  window.location.href = "/";   // redirect to home page 
+  window.location.href = "/";   // redirect to home page
   //should call disconnect
 }
 
@@ -237,6 +243,7 @@ reveal.onclick = function() {
     tiles: tiles
   });
 
+  // the following doesn't work
   // enable discard button
   var discard = document.getElementById('discard');
   discard.disable = false;
@@ -246,14 +253,101 @@ reveal.onclick = function() {
 // ----------------------------------------------------------------------------
 // CANCEL BUTTON
 // ----------------------------------------------------------------------------
+var cancel = document.getElementById('cancel');
 
+/**
+  * @desc cancel occurs when someone steals and their only options are reveal or cancel.
+ */
+cancel.onclick = function() {
+  console.log("cancelling");
+  // return the stolen piece
+  socket.emit('cancel', {
+    pID: socket.id,
+    name: Name,
+    room: Room
+  });
 
+  // request the server side to change the status of the previous actvive player as active
+  socket.emit('active switch cancel', {
+    pID: socket.id,
+    room: Room
+  });
+}
 
 // ----------------------------------------------------------------------------
 // WIN BUTTON
 // ----------------------------------------------------------------------------
+var win = document.getElementById('win');
 
+/**
+  * @desc player wins the game, only if they have a total tile count of at least 14
+ */
+win.onclick = function() {
+  console.log("win");
+  // return the stolen piece
+  socket.emit('win', {
+    pID: socket.id,
+    name: Name,
+    room: Room
+  });
+}
 
+// ----------------------------------------------------------------------------
+// REJECT BUTTON
+// ----------------------------------------------------------------------------
+var reject = document.getElementById('reject');
+
+/**
+  * @desc if a pleyer disagrees with another player's win, then
+  * reject win and continue with game
+ */
+reject.onclick = function() {
+  console.log("rejecting win");
+  Winner = "";
+}
+
+// ----------------------------------------------------------------------------
+// ACCEPT BUTTON
+// ----------------------------------------------------------------------------
+var accept = document.getElementById('accept');
+
+/**
+  * @desc player wins the game, only if they have a total tile count of at least 14
+ */
+accept.onclick = function() {
+  console.log("accepting");
+
+  // confirm win and change game state
+  socket.emit('reset', {
+    room: Room
+  });
+}
+
+// ----------------------------------------------------------------------------
+// PLAY AGAIN BUTTON
+// ----------------------------------------------------------------------------
+var again = document.getElementById('again');
+
+/**
+  * @desc return to waiting room if player plays again
+ */
+again.onclick = function() {
+  console.log("play again");
+
+  socket.emit('joinRoom',{
+    room: Room,
+    name: Name
+  });
+
+  socket.emit('newJoin',{
+    room: Room,
+    name: Name
+  });
+
+  document.getElementById('finished').classList.add('d-none');
+  document.getElementById('waiting').classList.remove('d-none');
+
+}
 
 
 // ----------------------------------------------------------------------------
@@ -281,10 +375,10 @@ socket.on('newPlay', function(data){
 
 /**
   * @desc display player's tiles
-  * @param data = {Array: tiles, String: message} - 
+  * @param data = {Array: tiles}, {String: message} -
   *   list of the player's tiles (strings) and function called to change the tiles (e.g. deal, discard, etc)
  */
-socket.on('player tiles', function(data){
+socket.on('display tiles', function(data){
   console.log("message: " + data.message);
   if(data.message == "deal" || data.message == "draw"){
     document.getElementById("hand").innerHTML = "";
@@ -364,6 +458,39 @@ socket.on('active', function(data){
     document.getElementById(ID).innerText = data.playerF;
   }
 
+});
+
+/**
+  * @desc display message on player's console
+  * @param data = {string: message} - message to print
+ */
+socket.on('message', function(data){
+  console.log(data.message);
+});
+
+/**
+  * @desc display winning details
+  * @param data = {string: name}, {Array: tiles}, {Array: revealed} - winning player's name, winning player's tiles in hand (string list), winning player's revealed tiles (list of string lists)
+ */
+socket.on('won', function(data){
+  Winner = data.name;
+  console.log(data.name + " has won");
+  console.log("revealed tiles: ");
+  console.log(data.revealed);
+  console.log("tiles in hand: ");
+  console.log(data.tiles);
+});
+
+/**
+  * @desc change display to finished display
+ */
+socket.on('to finish', function(){
+  document.getElementById('room2').innerText += " " + Room;
+  document.getElementById('winner').innerText += " " + Winner;
+  document.getElementById('game').classList.add('d-none');
+  document.getElementById('finished').classList.remove('d-none');
+
+  document.getElementById('players').innerHTML = "";
 });
 
 

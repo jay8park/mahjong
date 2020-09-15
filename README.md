@@ -16,14 +16,18 @@ Player:
 - revealed -- list of strings -- the tiles/completed sets that are revealed
 - active -- boolean -- is it the player's turn? 
 - outOfTurn -- boolean -- used for the steal functionality, i.e. you can complete a consecutive set via a steal ONLY if the player stole within his/her turn
+- revealTileCount -- int -- total number of tiles
 
 Room:
 - id -- string -- room code
-- players list -- list of strings -- list of the player's name
-- tile list -- list of strings -- the list of available tiles for this room
+- players -- list of strings -- list of the player's name
+- tiles -- list of strings -- the list of available tiles for this room
 - discard -- list of strings -- the list of dicarded tiles
-- last -- string -- the last discarded tile -- NOTE, might not need, bc we could just pop out the last element of discard
+- last -- string -- the last discarded tile 
+- prevLast -- string -- the previously last discarded tile -- used in steal, reveal, cancel
 - steal -- boolean -- if false, no one is able to steal, if true, players may steal; note, normally set to false when a player is in turn (draws a tile/discarding tile, etc.)
+- inplay -- boolean -- status of whether game has started (true) or whether still in waiting room (false) -- needed for the disconnect functionality
+- prevActive -- string -- the player id who was last previously active -- this is meant for the cancel functionality where we need to revert back to the original active player 
 
 #### Functions
 on ('connection')
@@ -47,11 +51,6 @@ on ('connection')
   - data: N/A
   - descr: remove player from ROOMS and PLAYERS if they disconnect
   - call to client: newPLay
-- leave
-  - data: room (string), name( string) -- room name and player name
-  - descr: if the leave button is triggered, remove player from ROOMS and PLAYERS
-  - call to client: newPlay
-  
 - active true
   - data: pID (string), name (string) -- player ID and player name
   - descr: change player's active status to true
@@ -68,29 +67,52 @@ on ('connection')
   - data: pID (string), room (string) -- player ID and room name
   - descr: change current player's active status to false and the active status of the player who stole to true
   - call to client: N/A
+- active swtich cancel
+  - data: pID (string), room (string) -- player ID and room name
+  - descr: change current player's acive status to false and the previous active player's active status to true
+  - call to client: N/A
      
 - deal
   - data: room (string) -- room name
   - descr: deal cards to every player in the room
-  - call to client: player tiles -- call to the player's client via their socket id
+  - call to client: display tiles -- call to the player's client via their socket id
 - draw
   - data: pID (string), name (string), room (string) -- player ID, player name, room name
   - descr: draw a tile from the room's tiles list (take from top)
-  - call to client: player tiles -- to the player via socket id
+  - call to client: display tiles -- to the player via socket id
 - discard
   - data: pID (string), name (string) tile (string), room (string) -- player ID, player name, tile to discard, room name
   - descr: discard a tile from player's hand/tiles
-  - call to client: player tiles -- to the player via socket id
+  - call to client: display tiles -- to the player via socket id
 - steal
   - data: pID (string), name (string), room (string) -- player ID, player name, room name
   - descr: steal the most recently discarded tile
-  - call to client: player tiles -- to the player via socket id
+  - call to client: display tiles -- to the player via socket id
 - reveal
   - data: pID (string), name (string), room (string), tiles (list of strings) -- player ID, player name, room name, list of tiles to reveal
   - descr: reveal completed set
-  - call to client: player tiles -- to the player via socket id
+  - call to client: display tiles -- to the player via socket id
+- cancel
+  - data: pID (string), name (string), room (string) -- player ID, player name, room name
+  - descr: remove the stolen tile from player's hand and return it to discard pile -- any player may now steal the discarded tile again
+  - call to client: display tiles
+- win
+  - data: pId (string), name (string), room (string) -- player ID, player name, room name
+  - descr: checks if total tile count it at least 14 for potential win, and returns message to client
+  - call to client: won, message
+- reset
+  - data: room (string) -- room name
+  - descr: reset game room's field, e.g. tiles, discarded, etc. to prep in the case the players want to play again; also removes players from the players list
 
 Helper Functions
+ - createRoom
+  - param: r (string) -- room name
+  - return: {Object} -- Room 
+  - descr: creates a Room object and adds to the ROOMS dict 
+ - createPlayer
+  - param: p (string), s (string) -- player name and socket id
+  - return: {Object} -- Player 
+  - descr: creates a Player object and adds to the PLAYERS dict 
 - checkPlayer
   - param: r (string), n (string) -- room name and player name
   - return: boolean
@@ -105,14 +127,15 @@ Helper Functions
   - descr: deals 13 tiles 
 - isIdentical
   - param: a (array) -- the list of tiles (string)
+  - param: t (string) -- the tile that needs to be included in a
   - return: (boolean) -- true if each tile is identical, false if not
   - descr: checks to see if each tile in the array is identical
 - isConsecutive
   - param: a (array) -- the list of tiles (string)
+  - param: t (string) -- the tile that needs to be included in a
   - return: (boolean) -- true if each tile is identical, false if not
   - descr: checks to see if each tile in the array is consecutive within the same suite
- - createRoom
- - createPlayer
+
  
  #### Note:
  Room name and room code are synonymous 
@@ -135,18 +158,31 @@ Event Functions
   - descr: when a user clicks on the "new" button, create a new room (after doing error checking) via server and redirect page
   - call to server: createRoom
   - socket function: roomCreated
-    
 - joinRoom.onclick
   - descr: when a user clicks the "join" button, join the specific room (after doing error checking) via server and redirect page
   - call to server: joinRoom
   - socket function: joined
-  
+
+Helper Functions
+- displayError
+  - param: name (string), room (string) -- document element value of name and room
+  - return: boolean -- true if there is an error with the name and room input, false otherwise
+  - descr: display error message(s) if name or room code input is not filled
+- resetError
+  - param: N/A
+  - return: N/A
+  - descr: remove error message(s) for the name or room code input
 
 ### games.js
 #### Fields
 - socket
 - room  -- room code
 - name  -- player's name
+- active -- boolean for curent player's turn
+- players -- list of all players in the room [me, left, top, right]
+- state -- determines which buttons are active (Waiting, InTurn, Discard, Reveal, Four, MeWin, TheyWin
+- selected -- list of selected tiles in hand by id (specifically for choose() function)
+- Tiles -- list of players tiles
 
 #### Functions
 Socket Functions
@@ -158,11 +194,20 @@ Socket Functions
   - data: message (boolean) -- true to start game, false to display error
   - descr: hide waiting area and display hiden game to proceed (for every other player who did not click start button)
 - newPlay
-  - data: players (array of strings) -- list of players associated with the room
-  - descr: displays players who have joined the game in the waiting list
-- player tiles
-  - data: tiles (array of strings) -- list of the player's tiles/hand
-  -descr: display the player's tiles/hand
+  - data: players (array of strings), error (string) -- list of players associated with the room and error message
+  - descr: displays players who have joined the game in the waiting list or the error message
+- display  tiles
+  - data: tiles (array of strings), message (string) -- list/dict of the player's tiles/hand and the message/description of the tiles 
+  - descr: display the player's tiles/hand
+- message
+  - data: message (string) -- message to print
+  - descr: display message on player's console
+- won
+  - data: name (string), tiles (string array), revealed (array of string arrays) -- winning player's name, winning player's tiles in hand, winning player's revealed tiles
+  - descr: display winning details on console
+- to finish
+  - data: N/A
+  -descr: write to html and change display to finished
 
 Event Functions
 - start.onclick
@@ -186,7 +231,27 @@ Event Functions
   - descr: reveal the completed set due to stealing the discarded tile
   - call to server: reveal
 - cancel.onclick
+  - descr: cancels the steal, so return stolen tile and change active status
+  - call to server: cancel, active switch cancel
 - win.onclick
+- reject.onclick
+  - descr: rejects someone's win and proceed with game
+  - call to server: N/A
+- accept.onclick
+  - descr: accepts someones win and resets game state as well as display ending credits
+  - call to server: reset
+- again.onclick
+  -descr: redirects to the waiting room 
+  - call to server: joinRoom, newJoin
+    - so, creates a new player, because previously w accept.onclick(), we call reset, which deletes the Players
+
+Helper Functions
+- choose
+  - descr: decides what happens when you click a tile based on State
+  - param: tile name, id number
+- setButtons
+  - descr: changes buttons based on State
+  - param: state name
 
 ### Note:
 games.js calls newJoin in the very beginning 
@@ -203,7 +268,7 @@ Home Page
     1) client (join.js): makeNew.onclick()
     2) server: createRoom -- data { message: false }
     3) client (join.js): roomCreated  -- print error
-  - **w/out a game code or name     -- need to make sure that form needs to be filled**
+  - w/out a game code or name     -- need to make sure that form needs to be filled
     1) client (join.js): makeNew.onclick()
     2) server: createRoom -- data { message: true }
     3) client (join.js): roomCreated  -- empty query, but redirected
@@ -268,3 +333,39 @@ Note: the waiting room and game room is the same html page
 
 
 players: -- person who clicks start goes first. player order: in order of who entered the room
+
+<br>
+how do turns work?
+
+
+<br>
+default buttons:
+- draw
+- steal
+
+
+on draw
+- discard
+- win
+
+
+on steal
+- reveal
+- cancel
+
+
+on reveal
+- discard
+- win
+
+
+on cancel
+- **change active status**
+- draw 
+- steal
+
+steal flag
+- true when player discards
+- false when player draws
+- false when player stea;s
+- true when player cancels
