@@ -525,6 +525,11 @@ io.sockets.on('connection', function(socket){
   socket.on('reset', function(data){
     console.log("resetting room: " + data.room);
 
+    for (var i = 0; i < ROOMS[data.room].players.length; i++) {
+      delete PLAYERS[ROOMS[data.room].players[i].id];
+    }
+
+    ROOMS[data.room].players = [];
     ROOMS[data.room].tiles = shuffle([...tiles]);
     ROOMS[data.room].discard = Object.assign({}, availableTiles);
     ROOMS[data.room].last = "";
@@ -532,6 +537,8 @@ io.sockets.on('connection', function(socket){
     ROOMS[data.room].steal = false;
     ROOMS[data.room].inplay = false;
     ROOMS[data.room].prevActive = "";
+
+    io.to(data.room).emit('to finish');
   });
 
 });

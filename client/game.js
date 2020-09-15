@@ -6,6 +6,7 @@ var Room = "";
 var Name = "";
 var Active = "";
 var Players = [];
+var Winner = "";
 //getting URL query data
 var search = window.location.search.substring(1);
 var params = search.split("&");
@@ -287,6 +288,7 @@ var reject = document.getElementById('reject');
  */
 reject.onclick = function() {
   console.log("rejecting win");
+  Winner = "";
 }
 
 // ----------------------------------------------------------------------------
@@ -300,12 +302,36 @@ var accept = document.getElementById('accept');
 accept.onclick = function() {
   console.log("accepting");
 
-  // change views to game end
-
   // confirm win and change game state
   socket.emit('reset', {
     room: Room
   });
+}
+
+// ----------------------------------------------------------------------------
+// PLAY AGAIN BUTTON
+// ----------------------------------------------------------------------------
+var again = document.getElementById('again');
+
+/**
+  * @desc return to waiting room if player plays again
+ */
+again.onclick = function() {
+  console.log("play again");
+
+  socket.emit('joinRoom',{
+    room: Room,
+    name: Name
+  });
+
+  socket.emit('newJoin',{
+    room: Room,
+    name: Name
+  });
+
+  document.getElementById('finished').classList.add('d-none');
+  document.getElementById('waiting').classList.remove('d-none');
+
 }
 
 
@@ -362,9 +388,22 @@ socket.on('message', function(data){
   * @param data = {string: name}, {Array: tiles}, {Array: revealed} - winning player's name, winning player's tiles in hand (string list), winning player's revealed tiles (list of string lists)
  */
 socket.on('won', function(data){
+  Winner = data.name;
   console.log(data.name + " has won");
   console.log("revealed tiles: ");
   console.log(data.revealed);
   console.log("tiles in hand: ");
   console.log(data.tiles);
+})
+
+/**
+  * @desc change display to finished display
+ */
+socket.on('to finish', function(){
+  document.getElementById('room2').innerText += " " + Room;
+  document.getElementById('winner').innerText += " " + Winner;
+  document.getElementById('game').classList.add('d-none');
+  document.getElementById('finished').classList.remove('d-none');
+
+  document.getElementById('players').innerHTML = "";
 })
