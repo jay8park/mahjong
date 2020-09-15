@@ -61,16 +61,22 @@ var availableTiles = {
   "b7" : 4,
   "b8" : 4,
   "b9" : 4,
-
-  "north" : 4,
-  "east" : 4,
-  "south" : 4,
-  "west" : 4,
-  "money" : 4,
-  "blank" : 4,
-  "center" : 4,
+  
+  "1east" : 4,
+  "2south" : 4,
+  "3west" : 4,
+  "4north" : 4,
+  "5money" : 4,
+  "6blank" : 4,
+  "7center" : 4,
 };
-var tiles = ["s1", "s1", "s1", "s1", "s2", "s2", "s2", "s2", "s3", "s3", "s3", "s3", "s4", "s4", "s4", "s4", "s5", "s5", "s5", "s5", "s6", "s6", "s6", "s6", "s7", "s7", "s7", "s7", "s8", "s8", "s8", "s8", "s9", "s9", "s9", "s9", "c1", "c1", "c1", "c1", "c2", "c2", "c2", "c2", "c3", "c3", "c3", "c3", "c4", "c4", "c4", "c4", "c5", "c5", "c5", "c5", "c6", "c6", "c6", "c6", "c7", "c7", "c7", "c7", "c8", "c8", "c8", "c8", "c9", "c9", "c9", "c9", "b1", "b1", "b1", "b1", "b2", "b2", "b2", "b2", "b3", "b3", "b3", "b3", "b4", "b4", "b4", "b4", "b5", "b5", "b5", "b5", "b6", "b6", "b6", "b6", "b7", "b7", "b7", "b7", "b8", "b8", "b8", "b8", "b9", "b9", "b9", "b9", "north", "north", "north", "north", "east", "east", "east", "east", "south", "south", "south", "south", "west", "west", "west", "west", "money", "money", "money", "money", "blank", "blank", "blank", "blank", "center", "center", "center", "center"];
+var tiles = ["s1", "s1", "s1", "s1", "s2", "s2", "s2", "s2", "s3", "s3", "s3", "s3", "s4", "s4", "s4", "s4", "s5", "s5", "s5", "s5", 
+"s6", "s6", "s6", "s6", "s7", "s7", "s7", "s7", "s8", "s8", "s8", "s8", "s9", "s9", "s9", "s9", "c1", "c1", "c1", "c1", "c2", "c2", "c2", "c2", 
+"c3", "c3", "c3", "c3", "c4", "c4", "c4", "c4", "c5", "c5", "c5", "c5", "c6", "c6", "c6", "c6", "c7", "c7", "c7", "c7", "c8", "c8", "c8", "c8", 
+"c9", "c9", "c9", "c9", "b1", "b1", "b1", "b1", "b2", "b2", "b2", "b2", "b3", "b3", "b3", "b3", "b4", "b4", "b4", "b4", "b5", "b5", "b5", "b5", 
+"b6", "b6", "b6", "b6", "b7", "b7", "b7", "b7", "b8", "b8", "b8", "b8", "b9", "b9", "b9", "b9", "1east", "1east", "1east", "1east", 
+"2south", "2south", "2south", "2south", "3west", "3west", "3west", "3west", "4north", "4north", "4north", "4north", "5money", "5money", "5money", "5money", 
+"6blank", "6blank", "6blank", "6blank", "7center", "7center", "7center", "7center"];
 
 // ----------------------------------------------------------------------------
 // GAME STATUSES
@@ -128,7 +134,7 @@ io.sockets.on('connection', function(socket){
     console.log("this is the socket id: " + socket.id);
     // this can be called by refreshing in waiting room, how handle edge cases
     if(ROOMS[data.room] && checkPlayer(data.room, data.name)){
-      io.to(socket.id).emit('newPlay', {
+      io.to(socket.id).emit('NODE APP', {
         error: "refresh"
       });
     }
@@ -255,11 +261,16 @@ io.sockets.on('connection', function(socket){
 
   /**
     * @desc change player's active status to true
-    * @param data = {string: pID}, {string: name} - player ID and player name
+    * @param data = {string: pID}, {string: room} - player ID and room
   */
   socket.on('active true', function(data){
     PLAYERS[data.pID].active = true;
     console.log("active status of " + PLAYERS[data.pID].name + " is now: " + PLAYERS[data.pID].active);
+    // notify the room
+    io.to(data.room).emit('active', {
+      playerT: PLAYERS[data.pID].name,
+      playerF: ""
+    });
   });
 
   /**
@@ -269,6 +280,11 @@ io.sockets.on('connection', function(socket){
   socket.on('active false', function(data){
     PLAYERS[data.pID].active = false;
     console.log("active status of " + PLAYERS[data.pID].name + " is now: " + PLAYERS[data.pID].active);
+    // notify the room
+    io.to(data.room).emit('active', {
+      playerT: "",
+      playerF: data.name
+    });
   });
 
   /**
@@ -293,6 +309,10 @@ io.sockets.on('connection', function(socket){
 
     console.log("active status of " + PLAYERS[data.pID].name + " is now: " + PLAYERS[data.pID].active);
     console.log("active status of " + ROOMS[data.room].players[nextPlayerIndex].name + " is now: " + ROOMS[data.room].players[nextPlayerIndex].active);
+    io.to(data.room).emit('active', {
+      playerT: ROOMS[data.room].players[nextPlayerIndex].name,
+      playerF: PLAYERS[data.pID].name
+    });
   });
 
   /**
@@ -302,8 +322,10 @@ io.sockets.on('connection', function(socket){
   socket.on('active switch steal', function(data){
     // set the current active player's status to false
     // also set the outOfTurn status
+    var index = -1;
     for (var p in ROOMS[data.room].players) {
       if (ROOMS[data.room].players[p].active == true) {
+        index = p;
         if (ROOMS[data.room].players[p].id == data.pID) {   // check to see if the stealer stole in turn or not
           ROOMS[data.room].players[p].outOfTurn = false;
         }
@@ -319,6 +341,10 @@ io.sockets.on('connection', function(socket){
     PLAYERS[data.pID].active = true;     // set active status of stealer to be true
 
     console.log("active status of " + PLAYERS[data.pID].name + " is now: " + PLAYERS[data.pID].active);
+    io.to(data.room).emit('active', {
+      playerT: PLAYERS[data.pID].name,
+      playerF: ROOMS[data.room].players[index].name
+    });
   });
 
 

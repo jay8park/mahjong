@@ -51,7 +51,7 @@
 .self{
     height: 15%;
     align-items: center;
-    margin-left: 15%;
+    margin-left: 10%;
 }
 .leftside, .rightside{
     writing-mode:vertical-lr;
@@ -146,7 +146,7 @@
     overflow: auto;
 }
 .disc{
-    height: 25%;
+    width: 7%;
     margin-left: 2.8%;
     background-image: url(img/background.png);
     background-size: 100%;
@@ -174,12 +174,21 @@
     width: 70%;
     margin-left: 25%;
     margin-top: 5%;
+    background-color: gray;
+    border-color: green;
+}
+.btn-primary:hover{
+    background-color:green;
 }
 .hand{
     height: 80%;
     background-image: url(img/background.png);
     background-size: 100%;
     margin: 0.5%;
+    outline: none;
+}
+#hand{
+    width: 90%;
 }
 /* #c8{
     border-style: solid;

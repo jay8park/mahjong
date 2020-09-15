@@ -1,4 +1,3 @@
-
 <!-- if you add DOCTYPE html the css gets wack -->
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 <link href='https://fonts.googleapis.com/css?family=Abel' rel='stylesheet'>
@@ -77,22 +76,23 @@
                     <img id="s7" class='disc' src="/client/img/s7.svg"></img>
                     <img id="s8" class='disc' src="/client/img/s8.svg"></img>
                     <img id="s9" class='disc' src="/client/img/s9.svg"></img><br>
-                    <img id="north" class='disc' src="/client/img/north.svg"></img>
-                    <img id="east" class='disc' src="/client/img/east.svg"></img>
-                    <img id="south" class='disc' src="/client/img/south.svg"></img>
-                    <img id="west" class='disc' src="/client/img/west.svg"></img>
-                    <img id="center" class='disc' src="/client/img/center.svg"></img>
-                    <img id="money" class='disc' src="/client/img/money.svg"></img>
-                    <img id="blank" class='disc' src="/client/img/blank.svg"></img>
+                    <img id="east" class='disc' src="/client/img/1east.svg"></img>
+                    <img id="south" class='disc' src="/client/img/2south.svg"></img>
+                    <img id="west" class='disc' src="/client/img/3west.svg"></img>
+                    <img id="north" class='disc' src="/client/img/4north.svg"></img>
+                    <img id="money" class='disc' src="/client/img/5money.svg"></img>
+                    <img id="blank" class='disc' src="/client/img/6blank.svg"></img>
+                    <img id="center" class='disc' src="/client/img/7center.svg"></img>
+                    
                 </div>
             </div>
             <!-- ---------- one's own reveal and buttons ----------------------------- -->
             <div class="row rev">
                 <div class="col col-sm-3">
                     <div class=" buttons">
-                        <input type="button" class="btn btn-primary" value="steal">
+                        <input type="button" class="btn btn-primary" value="steal" id="first">
                         
-                        <input type="button" class="btn btn-primary" value="discard">
+                        <input type="button" class="btn btn-primary" value="discard" id="second">
                     </div>
                 </div>
                 <div class='col col-sm-9'>
@@ -121,7 +121,9 @@
         </div>
     </div>
     <!-- ---------- one's own hand ------------------------------------ -->
-    <div class="row self" id="hand">
+    <div class="row self">
+        <p id="astat" style="font-size:25px;"></p>
+        <div id="hand"></div>
     </div>
     we've reached the game!
     <br>
@@ -139,6 +141,6 @@
 
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
 <script src="client/game.js"></script>

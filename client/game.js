@@ -4,6 +4,11 @@
 const socket = io();
 var Room = "";
 var Name = "";
+var Active = false; // is it the current players turn or not
+var Players = []; // list of names of other players in the same room; order is [me, left, top, right]
+var State = "Waiting" // state of current player to determine which buttons are active; 
+// Waiting (can steal), InTurn (steal or draw), Discard (choose a card), Reveal (or cancel after steal), Four (special case, only draw)
+
 //getting URL query data
 var search = window.location.search.substring(1);
 var params = search.split("&");
@@ -20,7 +25,7 @@ for(var item in params){
 document.getElementById('room').innerText += " " + Room;    // display Room name
 console.log("this is my ID: " + socket.id);
 
-// createS new player object
+// notify the server we arrived at this page
 socket.emit('newJoin', {
   room: Room,
   name: Name
@@ -56,7 +61,8 @@ start.onclick = function(){
 
             // set the player who clicked start to be active (it's their turn)
             socket.emit('active true', {
-              pID: socket.id
+              pID: socket.id, 
+              room: Room
             });
 
             // first player starts, and draws an extra tile.
@@ -65,6 +71,8 @@ start.onclick = function(){
               name: Name,
               room: Room
             });
+
+            Active = true;
         }
         else{
             document.getElementById('err').innerHTML = "Cannot start without 4 players";
@@ -87,6 +95,14 @@ socket.on('start', function(data){
       document.getElementById('topname').innerText = top;
       document.getElementById('leftname').innerText = left;
       document.getElementById('rightname').innerText = right;
+
+      // set player list
+      Players.push(Name + "");
+      Players.push(left + "");
+      Players.push(top + "");
+      Players.push(right + "");
+
+      console.log('players in this room: ' + Players);
 
       // hide the waiting room
       document.getElementById('waiting').classList.add('d-none');
@@ -269,12 +285,86 @@ socket.on('newPlay', function(data){
  */
 socket.on('player tiles', function(data){
   console.log("message: " + data.message);
-  if(data.message == "deal"){
+  if(data.message == "deal" || data.message == "draw"){
+    document.getElementById("hand").innerHTML = "";
+    if(Active){
+      document.getElementById("astat").innerHTML = "<b>*</b>";
+    }
+    var id = 0;
     for(var t in data.tiles){
       document.getElementById("hand").innerHTML += 
-      "<img class='hand' src='/client/img/" + data.tiles[t] + ".svg'>"
+      "<input type='image' class='hand' src='/client/img/" + data.tiles[t] + 
+      ".svg' onclick='hand("+id+")'>";
+      id += 1;
     }
+    
   }
   
   console.log(data.tiles);
-})
+});
+
+/**
+  * @desc when a players turn changes, adjust *
+  * @param data = {string: playerT, string: playerF} - the player whos turn it is, the player whos turn it was
+ */
+socket.on('active', function(data){
+  var ID = "";
+  console.log("data: " + data.playerT);
+  console.log("players: " + Players[0]);
+  switch(data.playerT){
+    case Players[0]:
+      Active = true;
+      break;
+    case Players[1]:
+      ID = "leftname";
+      break;
+    case Players[2]:
+      ID = "topname";
+      break;
+    case Players[3]:
+      ID = "rightname";
+      break;
+    default:
+      console.log("it is default");
+      ID = "none";
+      break;
+  }
+  if(Active){
+    document.getElementById('astat').innerHTML = "<b>*</b>";
+  }
+  else if(ID != "none"){
+    console.log(ID);
+    document.getElementById(ID).innerHTML += "*";
+  }
+
+  ID = "";
+  var n = "";
+  switch(data.playerF){
+    case Players[0]:
+      Active = false;
+      break;
+    case Players[1]:
+      ID = "leftname";
+      break;
+    case Players[2]:
+      ID = "topname";
+      break;
+    case Players[3]:
+      ID = "rightname";
+      break;
+    default:
+      ID = "none";
+      break;
+  }
+  if(!Active){
+    document.getElementById('astat').innerText = "";
+  }
+  if(ID != "none"){
+    document.getElementById(ID).innerText = data.playerF;
+  }
+
+});
+
+function hand(i){
+  console.log(i);
+}
