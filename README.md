@@ -97,9 +97,12 @@ on ('connection')
   - descr: remove the stolen tile from player's hand and return it to discard pile -- any player may now steal the discarded tile again
   - call to client: display tiles
 - win
-  - data: pId (string), name (string), room (string)
+  - data: pId (string), name (string), room (string) -- player ID, player name, room name
   - descr: checks if total tile count it at least 14 for potential win, and returns message to client
   - call to client: won, message
+- reset
+  - data: room (string) -- room name
+  - descr: reset game room's field, e.g. tiles, discarded, etc. to prep in the case the players want to play again
 
 Helper Functions
  - createRoom
@@ -223,7 +226,15 @@ Event Functions
   - descr: reveal the completed set due to stealing the discarded tile
   - call to server: reveal
 - cancel.onclick
+  - descr: cancels the steal, so return stolen tile and change active status
+  - call to server: cancel, active switch cancel
 - win.onclick
+- reject.onclick
+  - descr: rejects someone's win and proceed with game
+  - call to server: N/A
+- accept.onclick
+  - descr: accepts someones win and resets game state as well as display ending credits
+  - call to server: reset
 
 ### Note:
 games.js calls newJoin in the very beginning 
