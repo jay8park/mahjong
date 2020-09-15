@@ -22,7 +22,7 @@ Room:
 - players -- list of strings -- list of the player's name
 - tiles -- list of strings -- the list of available tiles for this room
 - discard -- list of strings -- the list of dicarded tiles
-- last -- string -- the last discarded tile -- NOTE, might not need, bc we could just pop out the last element of discard
+- last -- string -- the last discarded tile -- used for discard, steal, reveal, and cancel
 - steal -- boolean -- if false, no one is able to steal, if true, players may steal; note, normally set to false when a player is in turn (draws a tile/discarding tile, etc.)
 - inplay -- boolean -- status of whether game has started (true) or whether still in waiting room (false) -- needed for the disconnect functionality
 - prevActive -- string -- the player id who was last previously active -- this is meant for the cancel functionality where we need to revert back to the original active player 
@@ -65,27 +65,35 @@ on ('connection')
   - data: pID (string), room (string) -- player ID and room name
   - descr: change current player's active status to false and the active status of the player who stole to true
   - call to client: N/A
+- active swtich cancel
+  - data: pID (string), room (string) -- player ID and room name
+  - descr: change current player's acive status to false and the previous active player's active status to true
+  - call to client: N/A
      
 - deal
   - data: room (string) -- room name
   - descr: deal cards to every player in the room
-  - call to client: player tiles -- call to the player's client via their socket id
+  - call to client: display tiles -- call to the player's client via their socket id
 - draw
   - data: pID (string), name (string), room (string) -- player ID, player name, room name
   - descr: draw a tile from the room's tiles list (take from top)
-  - call to client: player tiles -- to the player via socket id
+  - call to client: display tiles -- to the player via socket id
 - discard
   - data: pID (string), name (string) tile (string), room (string) -- player ID, player name, tile to discard, room name
   - descr: discard a tile from player's hand/tiles
-  - call to client: player tiles -- to the player via socket id
+  - call to client: display tiles -- to the player via socket id
 - steal
   - data: pID (string), name (string), room (string) -- player ID, player name, room name
   - descr: steal the most recently discarded tile
-  - call to client: player tiles -- to the player via socket id
+  - call to client: display tiles -- to the player via socket id
 - reveal
   - data: pID (string), name (string), room (string), tiles (list of strings) -- player ID, player name, room name, list of tiles to reveal
   - descr: reveal completed set
-  - call to client: player tiles -- to the player via socket id
+  - call to client: display tiles -- to the player via socket id
+- cancel
+  - data: pID (string), name (string), room (string) -- player ID, player name, room name
+  - descr: remove the stolen tile from player's hand and return it to discard pile -- any player may now steal the discarded tile again
+  - call to client: display tiles
 
 Helper Functions
  - createRoom
@@ -310,3 +318,9 @@ on cancel
 - **change active status**
 - draw 
 - steal
+
+steal flag
+- true when player discards
+- false when player draws
+- false when player stea;s
+- true when player cancels
