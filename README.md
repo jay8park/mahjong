@@ -16,6 +16,7 @@ Player:
 - revealed -- list of strings -- the tiles/completed sets that are revealed
 - active -- boolean -- is it the player's turn? 
 - outOfTurn -- boolean -- used for the steal functionality, i.e. you can complete a consecutive set via a steal ONLY if the player stole within his/her turn
+- revealTileCount -- int -- total number of tiles
 
 Room:
 - id -- string -- room code
@@ -94,6 +95,10 @@ on ('connection')
   - data: pID (string), name (string), room (string) -- player ID, player name, room name
   - descr: remove the stolen tile from player's hand and return it to discard pile -- any player may now steal the discarded tile again
   - call to client: display tiles
+- win
+  - data: pId (string), name (string), room (string)
+  - descr: checks if total tile count it at least 14 for potential win, and returns message to client
+  - call to client: won, message
 
 Helper Functions
  - createRoom
@@ -118,10 +123,12 @@ Helper Functions
   - descr: deals 13 tiles 
 - isIdentical
   - param: a (array) -- the list of tiles (string)
+  - param: t (string) -- the tile that needs to be included in a
   - return: (boolean) -- true if each tile is identical, false if not
   - descr: checks to see if each tile in the array is identical
 - isConsecutive
   - param: a (array) -- the list of tiles (string)
+  - param: t (string) -- the tile that needs to be included in a
   - return: (boolean) -- true if each tile is identical, false if not
   - descr: checks to see if each tile in the array is consecutive within the same suite
 
@@ -183,6 +190,12 @@ Socket Functions
 - display  tiles
   - data: tiles (array of strings), message (string) -- list/dict of the player's tiles/hand and the message/description of the tiles 
   - descr: display the player's tiles/hand
+- message
+  - data: message (string) -- message to print
+  - descr: display message on player's console
+- won
+  - data: name (string), tiles (string array), revealed (array of string arrays) -- winning player's name, winning player's tiles in hand, winning player's revealed tiles
+  - descr: display winning details on console
 
 Event Functions
 - start.onclick
