@@ -102,7 +102,7 @@ on ('connection')
   - call to client: won, message
 - reset
   - data: room (string) -- room name
-  - descr: reset game room's field, e.g. tiles, discarded, etc. to prep in the case the players want to play again
+  - descr: reset game room's field, e.g. tiles, discarded, etc. to prep in the case the players want to play again; also removes players from the players list
 
 Helper Functions
  - createRoom
@@ -204,6 +204,9 @@ Socket Functions
 - won
   - data: name (string), tiles (string array), revealed (array of string arrays) -- winning player's name, winning player's tiles in hand, winning player's revealed tiles
   - descr: display winning details on console
+- to finish
+  - data: N/A
+  -descr: write to html and change display to finished
 
 Event Functions
 - start.onclick
@@ -236,6 +239,10 @@ Event Functions
 - accept.onclick
   - descr: accepts someones win and resets game state as well as display ending credits
   - call to server: reset
+- again.onclick
+  -descr: redirects to the waiting room 
+  - call to server: joinRoom, newJoin
+    - so, creates a new player, because previously w accept.onclick(), we call reset, which deletes the Players
 
 Helper Functions
 - choose
