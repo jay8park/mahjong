@@ -23,7 +23,8 @@ Room:
 - players -- list of strings -- list of the player's name
 - tiles -- list of strings -- the list of available tiles for this room
 - discard -- list of strings -- the list of dicarded tiles
-- last -- string -- the last discarded tile -- used for discard, steal, reveal, and cancel
+- last -- string -- the last discarded tile 
+- prevLast -- string -- the previously last discarded tile -- used in steal, reveal, cancel
 - steal -- boolean -- if false, no one is able to steal, if true, players may steal; note, normally set to false when a player is in turn (draws a tile/discarding tile, etc.)
 - inplay -- boolean -- status of whether game has started (true) or whether still in waiting room (false) -- needed for the disconnect functionality
 - prevActive -- string -- the player id who was last previously active -- this is meant for the cancel functionality where we need to revert back to the original active player 
