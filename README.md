@@ -181,6 +181,7 @@ Helper Functions
 - active -- boolean for curent player's turn
 - players -- list of all players in the room [me, left, top, right]
 - state -- determines which buttons are active (Waiting, InTurn, Discard, Reveal, Four, MeWin, TheyWin
+- selected -- list of selected tiles in hand by id (specifically for choose() function)
 
 #### Functions
 Socket Functions
@@ -235,6 +236,14 @@ Event Functions
 - accept.onclick
   - descr: accepts someones win and resets game state as well as display ending credits
   - call to server: reset
+
+Helper Functions
+- choose
+  - descr: decides what happens when you click a tile based on State
+  - param: tile name, id number
+- setButtons
+  - descr: changes buttons based on State
+  - param: state name
 
 ### Note:
 games.js calls newJoin in the very beginning 
