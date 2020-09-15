@@ -16,13 +16,15 @@ Player:
 - revealed -- list of strings -- the tiles/completed sets that are revealed
 - active -- boolean -- is it the player's turn? 
 - outOfTurn -- boolean -- used for the steal functionality, i.e. you can complete a consecutive set via a steal ONLY if the player stole within his/her turn
+- revealTileCount -- int -- total number of tiles
 
 Room:
 - id -- string -- room code
 - players -- list of strings -- list of the player's name
 - tiles -- list of strings -- the list of available tiles for this room
 - discard -- list of strings -- the list of dicarded tiles
-- last -- string -- the last discarded tile -- used for discard, steal, reveal, and cancel
+- last -- string -- the last discarded tile 
+- prevLast -- string -- the previously last discarded tile -- used in steal, reveal, cancel
 - steal -- boolean -- if false, no one is able to steal, if true, players may steal; note, normally set to false when a player is in turn (draws a tile/discarding tile, etc.)
 - inplay -- boolean -- status of whether game has started (true) or whether still in waiting room (false) -- needed for the disconnect functionality
 - prevActive -- string -- the player id who was last previously active -- this is meant for the cancel functionality where we need to revert back to the original active player 
@@ -94,6 +96,13 @@ on ('connection')
   - data: pID (string), name (string), room (string) -- player ID, player name, room name
   - descr: remove the stolen tile from player's hand and return it to discard pile -- any player may now steal the discarded tile again
   - call to client: display tiles
+- win
+  - data: pId (string), name (string), room (string) -- player ID, player name, room name
+  - descr: checks if total tile count it at least 14 for potential win, and returns message to client
+  - call to client: won, message
+- reset
+  - data: room (string) -- room name
+  - descr: reset game room's field, e.g. tiles, discarded, etc. to prep in the case the players want to play again
 
 Helper Functions
  - createRoom
@@ -118,10 +127,12 @@ Helper Functions
   - descr: deals 13 tiles 
 - isIdentical
   - param: a (array) -- the list of tiles (string)
+  - param: t (string) -- the tile that needs to be included in a
   - return: (boolean) -- true if each tile is identical, false if not
   - descr: checks to see if each tile in the array is identical
 - isConsecutive
   - param: a (array) -- the list of tiles (string)
+  - param: t (string) -- the tile that needs to be included in a
   - return: (boolean) -- true if each tile is identical, false if not
   - descr: checks to see if each tile in the array is consecutive within the same suite
 
@@ -167,6 +178,9 @@ Helper Functions
 - socket
 - room  -- room code
 - name  -- player's name
+- active -- boolean for curent player's turn
+- players -- list of all players in the room [me, left, top, right]
+- state -- determines which buttons are active (Waiting, InTurn, Discard, Reveal, Four, MeWin, TheyWin
 
 #### Functions
 Socket Functions
@@ -183,6 +197,12 @@ Socket Functions
 - display  tiles
   - data: tiles (array of strings), message (string) -- list/dict of the player's tiles/hand and the message/description of the tiles 
   - descr: display the player's tiles/hand
+- message
+  - data: message (string) -- message to print
+  - descr: display message on player's console
+- won
+  - data: name (string), tiles (string array), revealed (array of string arrays) -- winning player's name, winning player's tiles in hand, winning player's revealed tiles
+  - descr: display winning details on console
 
 Event Functions
 - start.onclick
@@ -206,7 +226,15 @@ Event Functions
   - descr: reveal the completed set due to stealing the discarded tile
   - call to server: reveal
 - cancel.onclick
+  - descr: cancels the steal, so return stolen tile and change active status
+  - call to server: cancel, active switch cancel
 - win.onclick
+- reject.onclick
+  - descr: rejects someone's win and proceed with game
+  - call to server: N/A
+- accept.onclick
+  - descr: accepts someones win and resets game state as well as display ending credits
+  - call to server: reset
 
 ### Note:
 games.js calls newJoin in the very beginning 
