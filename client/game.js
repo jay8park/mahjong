@@ -7,7 +7,8 @@ var Name = "";
 var Active = false; // is it the current players turn or not
 var Players = []; // list of names of other players in the same room; order is [me, left, top, right]
 var State = "Waiting" // state of current player to determine which buttons are active; 
-// Waiting (can steal), InTurn (steal or draw), Discard (choose a card), Reveal (or cancel after steal), Four (special case, only draw)
+// Waiting, InTurn, Discard, Reveal, Four, MeWin, TheyWin -- see setButtons(s)
+var Tiles = [];
 
 //getting URL query data
 var search = window.location.search.substring(1);
@@ -73,6 +74,8 @@ start.onclick = function(){
             });
 
             Active = true;
+            State = "Discard";
+            setButtons(State);
         }
         else{
             document.getElementById('err').innerHTML = "Cannot start without 4 players";
@@ -101,8 +104,6 @@ socket.on('start', function(data){
       Players.push(left + "");
       Players.push(top + "");
       Players.push(right + "");
-
-      console.log('players in this room: ' + Players);
 
       // hide the waiting room
       document.getElementById('waiting').classList.add('d-none');
@@ -294,12 +295,12 @@ socket.on('player tiles', function(data){
     for(var t in data.tiles){
       document.getElementById("hand").innerHTML += 
       "<input type='image' class='hand' src='/client/img/" + data.tiles[t] + 
-      ".svg' onclick='hand("+id+")'>";
+      ".svg' onclick='choose("+id+")' id='"+id+"'>";
       id += 1;
     }
-    
   }
-  
+  // update player Tiles
+  Tiles = data.tiles;
   console.log(data.tiles);
 });
 
@@ -365,6 +366,86 @@ socket.on('active', function(data){
 
 });
 
-function hand(i){
-  console.log(i);
+
+// ----------------------------------------------------------------------------
+// HELPER FUNCTIONS
+// ----------------------------------------------------------------------------
+/**
+  * @desc decide what happens when you click a tile
+  * tiles should only be clickable in the Discard or Reveal state
+  * @param tile = string tilename
+ */
+var selected = []; // list of selected tiles in your hand by id
+function choose(id){
+  console.log(id);
+  if(State == "Discard"){
+    for(var s in selected){
+      var temp = selected.splice(s, 1);
+      document.getElementById(temp+"").classList.remove("choose")
+      selected.pop();
+    }
+    document.getElementById(id).classList.add("choose");
+    selected.push(id);
+  }
+  else if(State == "Reveal"){
+    if(selected.length >= 3){
+      var temp = selected.pop();
+      document.getElementById(temp).classList.remove("choose");
+    }
+    document.getElementById(id).classList.add("choose");
+    selected.push(id);
+  }
+}
+
+/**
+  * @desc changes the button value and "active"ness based on state
+  * @param s = string{State}
+ */
+function setButtons(s){
+  var top = document.getElementById("first");
+  var bottom = document.getElementById("second");
+  switch(s){
+    case "Waiting": // steal
+      top.disabled = false;
+      top.value = "steal";
+      bottom.disabled = true;
+      break;
+    case "InTurn": // steal or draw
+      top.disabled = false;
+      top.value = "steal";
+      bottom.disabled = false;
+      bottom.value = "draw";
+      break;
+    case "Discard": // discard or win
+      top.disabled = false;
+      top.value = "discard";
+      bottom.disabled = false;
+      bottom.value = "win";
+      break;
+    case "Reveal": // reveal or cancel
+      top.disabled = false;
+      top.value = "reveal";
+      bottom.disabled = false;
+      bottom.value = "cancel";
+      break;
+    case "Four": // draw
+      top.disabled = false;
+      top.value = "draw";
+      bottom.disabled = true;
+      break;
+    case "MeWin": 
+      top.disabled = true;
+      bottom.disabled = true;
+      break;
+    case "TheyWin": //accept or reject
+      top.disabled = false;
+      top.value = "accept";
+      bottom.disabled = false;
+      bottom.value = "reject";
+      break;
+    default:
+      top.disabled = true;
+      bottom.disabled = true;
+      break;
+  }
 }

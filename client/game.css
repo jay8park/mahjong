@@ -177,8 +177,17 @@
     background-color: gray;
     border-color: green;
 }
-.btn-primary:hover{
+.btn-primary:active, .btn-primary:focus{
+    outline: none;
+    box-shadow: none;
+}
+.btn-primary:hover:enabled{
     background-color:green;
+}
+.btn-primary:disabled{
+    background-color: gray;
+    opacity: 50%;
+    border-color: gray;
 }
 .hand{
     height: 80%;
@@ -189,6 +198,10 @@
 }
 #hand{
     width: 90%;
+}
+.choose{
+    border-color: lightgreen;
+    border-style: solid;
 }
 /* #c8{
     border-style: solid;
