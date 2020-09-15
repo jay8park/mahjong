@@ -4,6 +4,8 @@
 const socket = io();
 var Room = "";
 var Name = "";
+var Active = "";
+var Players = [];
 //getting URL query data
 var search = window.location.search.substring(1);
 var params = search.split("&");
@@ -27,6 +29,10 @@ socket.emit('newJoin', {
 });
 
 
+// socket. emit('active') {
+  // room: Room
+// }
+
 // ----------------------------------------------------------------------------
 // START BUTTON
 // ----------------------------------------------------------------------------
@@ -39,6 +45,7 @@ var start = document.getElementById('start');
 start.onclick = function(){
     console.log("start");   // displayed only to the one who clicked it
 
+    Active = Name;
     socket.emit('startGame', {
       room: Room
     });
@@ -220,6 +227,7 @@ reveal.onclick = function() {
     tiles: tiles
   });
 
+  // the following doesn't work
   // enable discard button
   var discard = document.getElementById('discard');
   discard.disable = false;
@@ -229,8 +237,28 @@ reveal.onclick = function() {
 // ----------------------------------------------------------------------------
 // CANCEL BUTTON
 // ----------------------------------------------------------------------------
+var cancel = document.getElementById('cancel');
+
+/**
+  * @desc cancel occurs when someone steals and their only options are reveal or cancel.
+ */
+cancel.onclick = function() {
+  console.log("cancelling");
+  // return the stolen piece
+  socket.emit('cancel', {
+    pID: socket.id,
+    name: Name,
+    room: Room
+  });
+
+  // request the server side to change the status of the previous actvive player as active
+  socket.emit('active switch cancel', {
+    pID: socket.id,
+    room: Room
+  });
 
 
+}
 
 // ----------------------------------------------------------------------------
 // WIN BUTTON
@@ -275,7 +303,7 @@ socket.on('display tiles', function(data){
       "<img class='hand' src='/client/img/" + data.tiles[t] + ".svg'>"
     }
   }
-  
+
   console.log(data.tiles);
 })
 
