@@ -371,7 +371,6 @@ io.sockets.on('connection', function(socket){
         break;
       }
     }
-
     ROOMS[data.room].steal = true; // players can now steal tiles from discard
 
     console.log("discard pile: ")
@@ -394,6 +393,8 @@ io.sockets.on('connection', function(socket){
     PLAYERS[data.pID].tiles.sort();
     ROOMS[data.room].discard[ROOMS[data.room].last] -= 1;
     ROOMS[data.room].steal = false; // players cannot steal tiles from discard now
+    ROOMS[data.room].prevLast = ROOMS[data.room].last;
+    ROOMS[data.room].last = "";
 
     io.to(data.pID).emit('display tiles', {
       tiles: PLAYERS[data.pID].tiles,
@@ -410,7 +411,7 @@ io.sockets.on('connection', function(socket){
 
     // check if its a completed set
     var completed = false;
-    var identical = isIdentical(data.tiles, ROOMS[data.room].last);
+    var identical = isIdentical(data.tiles, ROOMS[data.room].prevLast);
 
     if (data.tiles.length == 3) {
       // if the player stole out of turn, completed set must be identical
@@ -419,7 +420,7 @@ io.sockets.on('connection', function(socket){
         completed = true;
       }
       // if player stole within turn, completed set can be identical or consecutive
-      else if (!PLAYERS[data.pID].outOfTurn && (identical || isConsecutive(data.tiles, ROOMS[data.room].last))) {
+      else if (!PLAYERS[data.pID].outOfTurn && (identical || isConsecutive(data.tiles, ROOMS[data.room].prevLast))) {
         console.log("IN TURN, & ITS CONSECUTIVE OR IDENTICAL");
         completed = true;
       }
@@ -440,6 +441,7 @@ io.sockets.on('connection', function(socket){
         }
       }
       PLAYERS[data.pID].revealed.push(data.tiles);    // add completed set list to revealed list
+      PLAYERS[data.pID].revealTileCount += data.tiles.length;
 
       io.to(data.pID).emit('display tiles', {
         tiles: PLAYERS[data.pID].tiles,
@@ -471,20 +473,65 @@ io.sockets.on('connection', function(socket){
 
     // remove stolen tile from hand
     for (var i = 0; i < PLAYERS[data.pID].tiles.length; i++) {
-      if (PLAYERS[data.pID].tiles[i] == ROOMS[data.room].last) {
+      if (PLAYERS[data.pID].tiles[i] == ROOMS[data.room].prevLast) {
         PLAYERS[data.pID].tiles.splice(i, 1);
         break;
       }
     }
 
     // set the fields and properties
+    ROOMS[data.room].last = ROOMS[data.room].prevLast;
     ROOMS[data.room].discard[ROOMS[data.room].last] += 1;
+    ROOMS[data.room].prevLast = "";
     ROOMS[data.room].steal = true; // players can now steal tiles from discard
 
     io.to(data.pID).emit('display tiles', {
       tiles: PLAYERS[data.pID].tiles,
-      message: "steal"
+      message: "cancel"
     });   // return the list of tiles to the player's screen
+  });
+
+  /**
+    * @desc check if total tile count is at least 14, and return respective message to client
+    * @param data = {string: pID}, {string: name}, {string: room} - player ID, player name, and room name
+  */
+  socket.on('win', function(data){
+    console.log(data.name + " won?");
+    var possibleWin = false;
+    if (PLAYERS[data.pID].tiles.length + PLAYERS[data.pID].revealTileCount >= 14) {
+      possibleWin = true;
+    }
+
+    if (possibleWin) {
+      // send to entire room
+      io.to(data.room).emit('won', {
+        name: data.name,
+        tiles: PLAYERS[data.pID].tiles,
+        revealed: PLAYERS[data.pID].revealed
+      });
+    }
+    else {
+      // send to player
+      io.to(data.pID).emit('message', {
+        message: "not enough tiles to win"
+      });   // return the list of tiles to the player's screen
+    }
+  });
+
+  /**
+    * @desc reset game state
+    * @param data = {string: room} - room name
+  */
+  socket.on('reset', function(data){
+    console.log("resetting room: " + data.room);
+
+    ROOMS[data.room].tiles = shuffle([...tiles]);
+    ROOMS[data.room].discard = Object.assign({}, availableTiles);
+    ROOMS[data.room].last = "";
+    ROOMS[data.room].prevLast = "";
+    ROOMS[data.room].steal = false;
+    ROOMS[data.room].inplay = false;
+    ROOMS[data.room].prevActive = "";
   });
 
 });
@@ -507,6 +554,7 @@ function createRoom(r){
   Room.tiles = shuffle(tilesCopy);
   Room.discard = Object.assign({}, availableTiles);
   Room.last = "";   // last dicarded tile
+  Room.prevLast = "";   // previously last discarded tile
   Room.steal = false;
   Room.inplay = false;
   Room.prevActive = "";   // should be player id rather than player name
@@ -528,6 +576,7 @@ function createPlayer(p, s){
   Player.revealed = []; // list of list
   Player.active = false;
   Player.outOfTurn = false;
+  Player.revealTileCount = 0;
   PLAYERS[Player.id] = Player;
   return Player;
 }

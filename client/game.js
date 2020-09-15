@@ -256,15 +256,57 @@ cancel.onclick = function() {
     pID: socket.id,
     room: Room
   });
-
-
 }
 
 // ----------------------------------------------------------------------------
 // WIN BUTTON
 // ----------------------------------------------------------------------------
+var win = document.getElementById('win');
 
+/**
+  * @desc player wins the game, only if they have a total tile count of at least 14
+ */
+win.onclick = function() {
+  console.log("win");
+  // return the stolen piece
+  socket.emit('win', {
+    pID: socket.id,
+    name: Name,
+    room: Room
+  });
+}
 
+// ----------------------------------------------------------------------------
+// REJECT BUTTON
+// ----------------------------------------------------------------------------
+var reject = document.getElementById('reject');
+
+/**
+  * @desc if a pleyer disagrees with another player's win, then
+  * reject win and continue with game
+ */
+reject.onclick = function() {
+  console.log("rejecting win");
+}
+
+// ----------------------------------------------------------------------------
+// ACCEPT BUTTON
+// ----------------------------------------------------------------------------
+var accept = document.getElementById('accept');
+
+/**
+  * @desc player wins the game, only if they have a total tile count of at least 14
+ */
+accept.onclick = function() {
+  console.log("accepting");
+
+  // change views to game end
+
+  // confirm win and change game state
+  socket.emit('reset', {
+    room: Room
+  });
+}
 
 
 // ----------------------------------------------------------------------------
@@ -313,4 +355,16 @@ socket.on('display tiles', function(data){
  */
 socket.on('message', function(data){
   console.log(data.message);
+})
+
+/**
+  * @desc display winning details
+  * @param data = {string: name}, {Array: tiles}, {Array: revealed} - winning player's name, winning player's tiles in hand (string list), winning player's revealed tiles (list of string lists)
+ */
+socket.on('won', function(data){
+  console.log(data.name + " has won");
+  console.log("revealed tiles: ");
+  console.log(data.revealed);
+  console.log("tiles in hand: ");
+  console.log(data.tiles);
 })
