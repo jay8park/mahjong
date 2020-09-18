@@ -182,7 +182,8 @@ Helper Functions
 - players -- list of all players in the room [me, left, top, right]
 - state -- determines which buttons are active (Waiting, InTurn, Discard, Reveal, Four, MeWin, TheyWin
 - selected -- list of selected tiles in hand by id (specifically for choose() function)
-- Tiles -- list of players tiles
+- tiles -- list of players tiles
+- winner
 
 #### Functions
 Socket Functions
