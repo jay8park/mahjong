@@ -7,7 +7,7 @@ var Name = "";
 var Active = false; // is it the current players turn or not
 var Players = []; // list of names of other players in the same room; order is [me, left, top, right]
 var State = "Waiting" // state of current player to determine which buttons are active; 
-// Waiting, InTurn, Discard, Reveal, Four, MeWin, TheyWin -- see setButtons(s)
+// Waiting, InTurn, Discard, Reveal, Four, MeWin, TheyWin -- see changeState(s)
 var Tiles = [];
 var Winner = "";
 
@@ -80,8 +80,7 @@ start.onclick = function(){
             });
 
             Active = true;
-            State = "Discard";
-            setButtons(State);
+            changeState("Discard");
         }
         else{
             document.getElementById('err').innerHTML = "Cannot start without 4 players";
@@ -136,6 +135,58 @@ leave.onclick = function() {
   //should call disconnect
 }
 
+
+// ----------------------------------------------------------------------------
+// BUTTONS !!!
+// ----------------------------------------------------------------------------
+
+var topbut = document.getElementById('first');
+topbut.onclick = function(){
+  if(!topbut.disabled){
+    if(topbut.value == 'discard'){
+      var tile = Tiles[selected[0]];
+      // discard the chosen tile
+      socket.emit('discard', {
+        name: Name,
+        pID: socket.id,
+        tile: tile,
+        room: Room
+      });
+      // set the active status of the player false and the next player's active status to true
+      socket.emit('active switch', {
+        pID: socket.id,
+        room: Room
+      });
+    }
+    else if(topbut.value == 'reveal'){
+      console.log(topbut.value);
+    }
+    else if(topbut.value == 'steal'){
+      console.log(topbut.value);
+    }
+    else if(topbut.value == 'accept'){
+      console.log(topbut.value);
+    }
+  }
+} 
+
+var botbut = document.getElementById('second');
+botbut.onclick = function(){
+  if(!botbut.disabled){
+    if(botbut.value == 'draw'){
+      console.log(botbut.value);
+    }
+    else if(botbut.value == 'win'){
+      console.log(botbut.value);
+    }
+    else if(botbut.value == 'cancel'){
+      console.log(botbut.value);
+    }
+    else if(botbut.value == 'reject'){
+      console.log(botbut.value);
+    }
+  }
+} 
 
 // ----------------------------------------------------------------------------
 // DRAW BUTTON
@@ -380,7 +431,7 @@ socket.on('newPlay', function(data){
  */
 socket.on('display tiles', function(data){
   console.log("message: " + data.message);
-  if(data.message == "deal" || data.message == "draw"){
+  //if(data.message == "deal" || data.message == "draw"){
     document.getElementById("hand").innerHTML = "";
     if(Active){
       document.getElementById("astat").innerHTML = "<b>*</b>";
@@ -392,7 +443,7 @@ socket.on('display tiles', function(data){
       ".svg' onclick='choose("+id+")' id='"+id+"'>";
       id += 1;
     }
-  }
+  //}
   // update player Tiles
   Tiles = data.tiles;
   console.log(data.tiles);
@@ -404,8 +455,9 @@ socket.on('display tiles', function(data){
  */
 socket.on('active', function(data){
   var ID = "";
-  console.log("data: " + data.playerT);
-  console.log("players: " + Players[0]);
+  console.log("player turning active: " + data.playerT);
+  console.log("player turning inactive: " + data.playerF);
+  console.log(Players);
   switch(data.playerT){
     case Players[0]:
       Active = true;
@@ -428,7 +480,7 @@ socket.on('active', function(data){
     document.getElementById('astat').innerHTML = "<b>*</b>";
   }
   else if(ID != "none"){
-    console.log(ID);
+    console.log("add: " + ID);
     document.getElementById(ID).innerHTML += "*";
   }
 
@@ -454,7 +506,8 @@ socket.on('active', function(data){
   if(!Active){
     document.getElementById('astat').innerText = "";
   }
-  if(ID != "none"){
+  else if(ID != "none"){
+    console.log("remove: "+ID);
     document.getElementById(ID).innerText = data.playerF;
   }
 
@@ -489,7 +542,6 @@ socket.on('to finish', function(){
   document.getElementById('winner').innerText += " " + Winner;
   document.getElementById('game').classList.add('d-none');
   document.getElementById('finished').classList.remove('d-none');
-
   document.getElementById('players').innerHTML = "";
 });
 
@@ -525,17 +577,18 @@ function choose(id){
 }
 
 /**
-  * @desc changes the button value and "active"ness based on state
+  * @desc changes the state of player and button values
   * @param s = string{State}
  */
-function setButtons(s){
+function changeState(s){
+  State = s;
   var top = document.getElementById("first");
   var bottom = document.getElementById("second");
   switch(s){
     case "Waiting": // steal
-      top.disabled = false;
-      top.value = "steal";
-      bottom.disabled = true;
+      top.disabled = true;
+      bottom.value = "steal";
+      bottom.disabled = false;
       break;
     case "InTurn": // steal or draw
       top.disabled = false;
@@ -556,9 +609,9 @@ function setButtons(s){
       bottom.value = "cancel";
       break;
     case "Four": // draw
-      top.disabled = false;
-      top.value = "draw";
-      bottom.disabled = true;
+      top.disabled = true;
+      bottom.disabled = false;
+      bottom.value = "draw";
       break;
     case "MeWin": 
       top.disabled = true;
