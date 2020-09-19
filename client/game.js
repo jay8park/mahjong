@@ -81,6 +81,7 @@ start.onclick = function(){
 
             Active = true;
             changeState("Discard");
+            document.getElementById('astat').innerHTML = "<b>*</b>";
         }
         else{
             document.getElementById('err').innerHTML = "Cannot start without 4 players";
@@ -145,6 +146,7 @@ topbut.onclick = function(){
   if(!topbut.disabled){
     if(topbut.value == 'discard'){
       var tile = Tiles[selected[0]];
+      
       // discard the chosen tile
       socket.emit('discard', {
         name: Name,
@@ -157,6 +159,7 @@ topbut.onclick = function(){
         pID: socket.id,
         room: Room
       });
+      changeState("Waiting");
     }
     else if(topbut.value == 'reveal'){
       console.log(topbut.value);
@@ -450,65 +453,82 @@ socket.on('display tiles', function(data){
 });
 
 /**
+  * @desc update the discard pile
+  * @param data = {String: tile} - the name of the tile last discarded
+ */
+socket.on('update discard', function(data){
+  console.log("last discarded: " + data.tile);
+  var actives = document.getElementsByClassName("grab"); // get current highlighted
+  if(actives.length > 0){
+    // should really only have one element at a time
+    for(var i in actives){
+      actives[i].classList.remove('grab');
+    }
+  }      
+  document.getElementById(data.tile).classList.add('grab'); // highlight last discarded
+});
+
+/**
   * @desc when a players turn changes, adjust *
-  * @param data = {string: playerT, string: playerF} - the player whos turn it is, the player whos turn it was
+  * @param data = {string: playerT, string: playerF, boolean: inturn} - the player whos turn it is, the player whos turn it was
  */
 socket.on('active', function(data){
+  var t = data.playerT;
+  var f = data.playerF;
   var ID = "";
-  console.log("player turning active: " + data.playerT);
-  console.log("player turning inactive: " + data.playerF);
-  console.log(Players);
-  switch(data.playerT){
-    case Players[0]:
-      Active = true;
-      break;
-    case Players[1]:
-      ID = "leftname";
-      break;
-    case Players[2]:
-      ID = "topname";
-      break;
-    case Players[3]:
-      ID = "rightname";
-      break;
-    default:
-      console.log("it is default");
-      ID = "none";
-      break;
+  if(t == Players[0]){
+    Active = true;
+    ID = "none";
   }
-  if(Active){
-    document.getElementById('astat').innerHTML = "<b>*</b>";
+  else if(t == Players[1]){
+    ID = "leftname";
   }
-  else if(ID != "none"){
-    console.log("add: " + ID);
+  else if(t == Players[2]){
+    ID = "topname";
+  }
+  else if(t == Players[3]){
+    ID = "rightname";
+  }
+  else{
+    ID = "none";
+  }
+  if(ID != "none"){
     document.getElementById(ID).innerHTML += "*";
   }
 
   ID = "";
   var n = "";
-  switch(data.playerF){
-    case Players[0]:
-      Active = false;
-      break;
-    case Players[1]:
-      ID = "leftname";
-      break;
-    case Players[2]:
-      ID = "topname";
-      break;
-    case Players[3]:
-      ID = "rightname";
-      break;
-    default:
-      ID = "none";
-      break;
+  if(f == Players[0]){
+    Active = false;
+    ID = "none";
   }
-  if(!Active){
-    document.getElementById('astat').innerText = "";
+  else if(f == Players[1]){
+    ID = "leftname";
   }
-  else if(ID != "none"){
-    console.log("remove: "+ID);
+  else if(f == Players[2]){
+    ID = "topname";
+  }
+  else if(f == Players[3]){
+    ID = "rightname";
+  }
+  else{
+    ID = "none";
+  }
+  if(ID != "none"){
     document.getElementById(ID).innerText = data.playerF;
+  }
+
+  if(Active){
+    document.getElementById('astat').innerHTML = "<b>*</b>";
+    if(data.inturn){
+      changeState("InTurn");
+    }
+    else{
+      changeState("Reveal");
+    }
+  }
+  else{
+    document.getElementById('astat').innerText = "";
   }
 
 });
@@ -586,9 +606,9 @@ function changeState(s){
   var bottom = document.getElementById("second");
   switch(s){
     case "Waiting": // steal
-      top.disabled = true;
-      bottom.value = "steal";
-      bottom.disabled = false;
+      top.disabled = false;
+      top.value = "steal";
+      bottom.disabled = true;
       break;
     case "InTurn": // steal or draw
       top.disabled = false;

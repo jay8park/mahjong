@@ -241,11 +241,7 @@ io.sockets.on('connection', function(socket){
   socket.on('active true', function(data){
     PLAYERS[data.pID].active = true;
     console.log("active status of " + PLAYERS[data.pID].name + " is now: " + PLAYERS[data.pID].active);
-    // notify the room
-    io.to(data.room).emit('active', {
-      playerT: PLAYERS[data.pID].name,
-      playerF: ""
-    });
+    // only used once in beginning
   });
 
   /**
@@ -255,11 +251,7 @@ io.sockets.on('connection', function(socket){
   socket.on('active false', function(data){
     PLAYERS[data.pID].active = false;
     console.log("active status of " + PLAYERS[data.pID].name + " is now: " + PLAYERS[data.pID].active);
-    // notify the room
-    io.to(data.room).emit('active', {
-      playerT: "",
-      playerF: data.name
-    });
+    // not used yet
   });
 
   /**
@@ -286,7 +278,8 @@ io.sockets.on('connection', function(socket){
     console.log("active status of " + ROOMS[data.room].players[nextPlayerIndex].name + " is now: " + ROOMS[data.room].players[nextPlayerIndex].active);
     io.to(data.room).emit('active', {
       playerT: ROOMS[data.room].players[nextPlayerIndex].name,
-      playerF: PLAYERS[data.pID].name
+      playerF: PLAYERS[data.pID].name,
+      inturn: true,
     });
   });
 
@@ -317,7 +310,8 @@ io.sockets.on('connection', function(socket){
     console.log("active status of " + PLAYERS[data.pID].name + " is now: " + PLAYERS[data.pID].active);
     io.to(data.room).emit('active', {
       playerT: PLAYERS[data.pID].name,
-      playerF: ROOMS[data.room].players[index].name
+      playerF: ROOMS[data.room].players[index].name,
+      inturn: false
     });
   });
 
@@ -331,6 +325,11 @@ io.sockets.on('connection', function(socket){
 
     console.log("active status of " + PLAYERS[data.pID].name + " is now: " + PLAYERS[data.pID].active);
     console.log("active status of " + PLAYERS[ROOMS[data.room].prevActive].name + " is now: " + PLAYERS[ROOMS[data.room].prevActive].active);
+    io.to(data.room).emit('active', {
+      playerT: PLAYERS[ROOMS[data.room].prevActive].name,
+      playerF: PLAYERS[data.pID].name,
+      inturn: true,
+    });
   });
 
 
@@ -404,6 +403,9 @@ io.sockets.on('connection', function(socket){
       tiles: PLAYERS[data.pID].tiles,
       message: "discard"
     });   // return the list of tiles to the player's screen
+    io.to(data.room).emit('update discard', {
+      tile: data.tile
+    });
   });
 
   /**
