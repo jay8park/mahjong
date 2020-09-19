@@ -176,28 +176,34 @@
     padding: 5%;
     margin-top: 2%;
 }
-.btn-primary{
+.btn-user{
     width: 100%;
     /* margin-left: 25%; */
     margin-top: 5%;
     background-color: gray;
     border-color: green;
+    color: white;
+    
 }
-.btn-primary:active, .btn-primary:focus{
+.btn-user:active, .btn-user:focus{
     outline: none;
     box-shadow: none;
 }
-.btn-primary:hover:enabled{
+.btn-user:hover:enabled{
     background-color:green;
+    color: white;
 }
-.btn-primary:disabled{
+.btn-user:disabled{
     background-color: gray;
     opacity: 50%;
     border-color: gray;
+    color: white;
 }
 .hid{
-    width: 45% !important;
+    width: 46% !important;
     margin: 2%;
+    text-align: center;
+    padding: 1%;
 }
 .hand{
     height: 80%;

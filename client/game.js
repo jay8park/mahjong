@@ -10,6 +10,7 @@ var State = "Nothing" // state of current player to determine which buttons are 
 // Steal, InTurn, Discard, Reveal, Four, MeWin, TheyWin -- see changeState(s)
 var Tiles = [];
 var Winner = "";
+var selected = []; // list of selected tiles in your hand by id
 
 //getting URL query data
 var search = window.location.search.substring(1);
@@ -161,7 +162,7 @@ topbut.onclick = function(){
         });
         // change the state of these players
         socket.emit('change others', {
-          names: [Players[2], Players[3]],
+          names: Players.slice(2),
           state: "Steal",
           room: Room,
         });
@@ -172,7 +173,24 @@ topbut.onclick = function(){
       console.log(topbut.value);
     }
     else if(topbut.value == 'steal'){
-      console.log(topbut.value);
+      // call server
+      socket.emit('steal', {
+        pID: socket.id,
+        name: Name,
+        room: Room
+      });
+      // request the server to change the status of the player (who stole) as active
+      socket.emit('active switch steal', {
+        pID: socket.id,
+        room: Room
+      });
+      socket.emit('change others', {
+        names: Players.slice(1),
+        state: "Nothing",
+        room: Room,
+      });
+      clearBoard();
+      changeState("Reveal");
     }
     else if(topbut.value == 'accept'){
       console.log(topbut.value);
@@ -190,6 +208,13 @@ botbut.onclick = function(){
         name: Name,
         room: Room
       });
+      socket.emit('change others', {
+        names: Players.slice(1),
+        state: "Nothing",
+        room: Room,
+      });
+      clearBoard();
+      changeState("Discard");
     }
     else if(botbut.value == 'win'){
       console.log(botbut.value);
@@ -449,27 +474,37 @@ socket.on('newPlay', function(data){
 
 /**
   * @desc display player's tiles
-  * @param data = {Array: tiles}, {String: message} -
+  * @param data = {Array: tiles}, {String: message}, {String: tile} -
   *   list of the player's tiles (strings) and function called to change the tiles (e.g. deal, discard, etc)
  */
 socket.on('display tiles', function(data){
-  console.log("message: " + data.message);
-  //if(data.message == "deal" || data.message == "draw"){
-    document.getElementById("hand").innerHTML = "";
-    if(Active){
-      document.getElementById("astat").innerHTML = "<b>*</b>";
+  //console.log("message: " + data.message);
+  var theone = "none";
+  var done = false;
+  if(data.message == "steal"){
+    theone = data.tile;
+  }
+  document.getElementById("hand").innerHTML = "";
+  // if(Active){
+  //   document.getElementById("astat").innerHTML = "<b>*</b>";
+  // }
+  var id = 0;
+  for(var t in data.tiles){
+    document.getElementById("hand").innerHTML += 
+    "<input type='image' class='hand' src='/client/img/" + data.tiles[t] + 
+    ".svg' onclick='choose("+id+")' id='"+id+"'>";
+    if(theone != "none" && theone == data.tiles[t] && !done){
+      document.getElementById(id).classList.add("choose");
+      document.getElementById(id).disabled = true;
+      selected.push(id);
+      done = true;
     }
-    var id = 0;
-    for(var t in data.tiles){
-      document.getElementById("hand").innerHTML += 
-      "<input type='image' class='hand' src='/client/img/" + data.tiles[t] + 
-      ".svg' onclick='choose("+id+")' id='"+id+"'>";
-      id += 1;
-    }
-  //}
+      
+    id += 1;
+  }
   // update player Tiles
   Tiles = data.tiles;
-  console.log(data.tiles);
+  //console.log(data.tiles);
 });
 
 /**
@@ -603,11 +638,10 @@ socket.on('to finish', function(){
  */
 function clearBoard(){
   var actives = document.getElementsByClassName("grab"); // get current highlighted
+  console.log(actives.length);
   if(actives.length > 0){
     // should really only have one element at a time
-    for(var i in actives){
-      actives[i].classList.remove('grab');
-    }
+    actives[0].classList.remove('grab');
   } 
 }
  
@@ -617,25 +651,31 @@ function clearBoard(){
   * tiles should only be clickable in the Discard or Reveal state
   * @param tile = string tilename
  */
-var selected = []; // list of selected tiles in your hand by id
+
 function choose(id){
-  console.log(id);
+  //console.log(id);
   if(State == "Discard"){
-    for(var s in selected){
+    for(var s in selected){ // in theory should only have one
       var temp = selected.splice(s, 1);
-      document.getElementById(temp+"").classList.remove("choose")
-      selected.pop();
+      document.getElementById(temp+"").classList.remove("choose");
+      selected.shift(); // remove from front
     }
     document.getElementById(id).classList.add("choose");
     selected.push(id);
   }
   else if(State == "Reveal"){
-    if(selected.length >= 3){
-      var temp = selected.pop();
-      document.getElementById(temp).classList.remove("choose");
+    if(document.getElementById(id).classList.contains("choose")){
+      document.getElementById(id).classList.remove("choose");
+      selected.splice(selected.indexOf(id), 1);
     }
-    document.getElementById(id).classList.add("choose");
-    selected.push(id);
+    else{
+      if(selected.length >= 3){
+        var temp = selected.splice(1,1); // remove the second one bc the first should be permanent
+        document.getElementById(temp).classList.remove("choose");
+      }
+      document.getElementById(id).classList.add("choose");
+      selected.push(id);
+    }
   }
 }
 
@@ -706,6 +746,7 @@ function changeState(s){
     default:
       top.disabled = true;
       bottom.disabled = true;
+      clearBoard();
       break;
   }
 }

@@ -298,12 +298,13 @@ io.sockets.on('connection', function(socket){
     else {
       PLAYERS[data.pID].outOfTurn = true;
     }
-
+    var name = "";
     // set the current active player's status to false
     for (var p in ROOMS[data.room].players) {     // note, p is just the index, doesn't actually give us the player's name
       if (ROOMS[data.room].players[p].active == true) {
         ROOMS[data.room].prevActive = ROOMS[data.room].players[p].id;    // set prevActive player
         ROOMS[data.room].players[p].active = false;
+        name = ROOMS[data.room].players[p].name;
         console.log("active status of " + ROOMS[data.room].players[p].name + " is now: " + ROOMS[data.room].players[p].active);
         break;
       }
@@ -313,7 +314,7 @@ io.sockets.on('connection', function(socket){
     console.log("active status of " + PLAYERS[data.pID].name + " is now: " + PLAYERS[data.pID].active);
     io.to(data.room).emit('active', {
       playerT: PLAYERS[data.pID].name,
-      playerF: ROOMS[data.room].players[index].name,
+      playerF: name,
       inturn: false
     });
   });
@@ -427,7 +428,7 @@ io.sockets.on('connection', function(socket){
   */
   socket.on('steal', function(data){
     console.log(data.name + " is stealing discarded tile: " + ROOMS[data.room].last);
-
+    var tile = ROOMS[data.room].last;
     PLAYERS[data.pID].tiles.push(ROOMS[data.room].last);
     PLAYERS[data.pID].tiles.sort();
     ROOMS[data.room].discard[ROOMS[data.room].last] -= 1;
@@ -437,7 +438,8 @@ io.sockets.on('connection', function(socket){
 
     io.to(data.pID).emit('display tiles', {
       tiles: PLAYERS[data.pID].tiles,
-      message: "steal"
+      message: "steal",
+      tile: tile
     });   // return the list of tiles to the player's screen
   });
 
