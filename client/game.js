@@ -6,8 +6,8 @@ var Room = "";
 var Name = "";
 var Active = false; // is it the current players turn or not
 var Players = []; // list of names of other players in the same room; order is [me, left, top, right]
-var State = "Waiting" // state of current player to determine which buttons are active; 
-// Waiting, InTurn, Discard, Reveal, Four, MeWin, TheyWin -- see changeState(s)
+var State = "Nothing" // state of current player to determine which buttons are active; 
+// Steal, InTurn, Discard, Reveal, Four, MeWin, TheyWin -- see changeState(s)
 var Tiles = [];
 var Winner = "";
 
@@ -145,21 +145,28 @@ var topbut = document.getElementById('first');
 topbut.onclick = function(){
   if(!topbut.disabled){
     if(topbut.value == 'discard'){
-      var tile = Tiles[selected[0]];
-      
-      // discard the chosen tile
-      socket.emit('discard', {
-        name: Name,
-        pID: socket.id,
-        tile: tile,
-        room: Room
-      });
-      // set the active status of the player false and the next player's active status to true
-      socket.emit('active switch', {
-        pID: socket.id,
-        room: Room
-      });
-      changeState("Waiting");
+      if(selected.length == 1){ // if they didn't choose one, do nothing
+        var tile = Tiles[selected[0]];
+        // set the active status of the player false and the next player's active status to true
+        socket.emit('active switch', {
+          pID: socket.id,
+          room: Room
+        });
+        // discard the chosen tile
+        socket.emit('discard', {
+          name: Name,
+          pID: socket.id,
+          tile: tile,
+          room: Room
+        });
+        // change the state of these players
+        socket.emit('change others', {
+          names: [Players[2], Players[3]],
+          state: "Steal",
+          room: Room,
+        });
+        changeState("Nothing");
+      }
     }
     else if(topbut.value == 'reveal'){
       console.log(topbut.value);
@@ -177,12 +184,14 @@ var botbut = document.getElementById('second');
 botbut.onclick = function(){
   if(!botbut.disabled){
     if(botbut.value == 'draw'){
-      console.log(botbut.value);
+      // draw a tile from the deck
+      socket.emit('draw', {
+        pID: socket.id,
+        name: Name,
+        room: Room
+      });
     }
     else if(botbut.value == 'win'){
-      console.log(botbut.value);
-    }
-    else if(botbut.value == 'cancel'){
       console.log(botbut.value);
     }
     else if(botbut.value == 'reject'){
@@ -190,6 +199,16 @@ botbut.onclick = function(){
     }
   }
 } 
+
+var w = document.getElementById("w");
+w.onclick = function(){
+  console.log("player " + Name + " claims win.");
+}
+
+var c = document.getElementById("canc");
+c.onclick = function(){
+  console.log("cancel");
+}
 
 // ----------------------------------------------------------------------------
 // DRAW BUTTON
@@ -236,6 +255,7 @@ discard.onclick = function() {
     pID: socket.id,
     room: Room
   });
+
 }
 
 
@@ -458,14 +478,20 @@ socket.on('display tiles', function(data){
  */
 socket.on('update discard', function(data){
   console.log("last discarded: " + data.tile);
-  var actives = document.getElementsByClassName("grab"); // get current highlighted
-  if(actives.length > 0){
-    // should really only have one element at a time
-    for(var i in actives){
-      actives[i].classList.remove('grab');
+  clearBoard();    
+  document.getElementById(data.tile).classList.add('grab'); // highlight last discarded  
+});
+
+/**
+  * @desc change my state
+  * @param data = {Array: names}, {string, state} - the name of the tile last discarded
+ */
+socket.on('change state', function(data){
+  for(var i in data.names){
+    if(data.names[i] == Name){
+      changeState(data.state);
     }
-  }      
-  document.getElementById(data.tile).classList.add('grab'); // highlight last discarded
+  }
 });
 
 /**
@@ -520,11 +546,13 @@ socket.on('active', function(data){
 
   if(Active){
     document.getElementById('astat').innerHTML = "<b>*</b>";
-    if(data.inturn){
-      changeState("InTurn");
-    }
-    else{
-      changeState("Reveal");
+    if(data.inturn != null){ // case of the first turn
+      if(data.inturn){
+        changeState("InTurn");
+      }
+      else{
+        changeState("Reveal");
+      }
     }
   }
   else{
@@ -569,6 +597,21 @@ socket.on('to finish', function(){
 // ----------------------------------------------------------------------------
 // HELPER FUNCTIONS
 // ----------------------------------------------------------------------------
+
+/**
+  * @desc clear discard board to not highlight anything
+ */
+function clearBoard(){
+  var actives = document.getElementsByClassName("grab"); // get current highlighted
+  if(actives.length > 0){
+    // should really only have one element at a time
+    for(var i in actives){
+      actives[i].classList.remove('grab');
+    }
+  } 
+}
+ 
+
 /**
   * @desc decide what happens when you click a tile
   * tiles should only be clickable in the Discard or Reveal state
@@ -604,8 +647,27 @@ function changeState(s){
   State = s;
   var top = document.getElementById("first");
   var bottom = document.getElementById("second");
+  // three button case
+  var half = document.getElementById("steals");
+  var lower = document.getElementById("lower");
+  if(s == "Reveal"){
+    if(!lower.classList.contains('d-none')){
+      lower.classList.add('d-none');
+    }
+    if(half.classList.contains('d-none')){
+      half.classList.remove('d-none');
+    }
+  }
+  else{
+    if(lower.classList.contains('d-none')){
+      lower.classList.remove('d-none');
+    }
+    if(!half.classList.contains('d-none')){
+      half.classList.add('d-none');
+    }
+  }
   switch(s){
-    case "Waiting": // steal
+    case "Steal": // steal
       top.disabled = false;
       top.value = "steal";
       bottom.disabled = true;
@@ -625,8 +687,6 @@ function changeState(s){
     case "Reveal": // reveal or cancel
       top.disabled = false;
       top.value = "reveal";
-      bottom.disabled = false;
-      bottom.value = "cancel";
       break;
     case "Four": // draw
       top.disabled = true;

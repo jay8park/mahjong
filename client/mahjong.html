@@ -73,14 +73,21 @@
         </div>
         <!-- ---------- one's own reveal and buttons ----------------------------- -->
         <div class="row rev">
-            <div class="col col-sm-3">
-                <div class=" buttons">
-                    <input type="button" class="btn btn-secondary" value="steal">
-                    
-                    <input type="button" class="btn btn-secondary" value="discard">
+            <div class="col col-sm-2">
+                <div class="buttons">
+                    <div class="row">
+                        <input type="button" class="btn btn-secondary" value="steal">
+                    </div>
+                    <div class="row" >
+                        <input type="button" class="btn btn-primary" value="cancel" id="second">
+                        <input type="button" class="btn btn-primary" value="draw" id="third">
+                    </div>
+                    <div class="row" hidden >
+                        <div class='col-md-12'><input type="button" class="btn btn-primary" value="accept" id="second"></div>
+                    </div>
                 </div>
             </div>
-            <div class='col col-sm-9'>
+            <div class='col col-sm-10'>
                 <div class="srev">
                     <img class="sou" src="/client/img/b1.svg">
                     <img class="sou" src="/client/img/background.png">

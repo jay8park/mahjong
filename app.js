@@ -144,8 +144,8 @@ io.sockets.on('connection', function(socket){
       }
       var player = createPlayer(data.name, socket.id);
       ROOMS[data.room].players.push(player);  //add Player to room
-      console.log("created room: " + JSON.stringify(ROOMS[data.room]));
-      console.log("players: " + JSON.stringify(PLAYERS));
+      // console.log("created room: " + JSON.stringify(ROOMS[data.room]));
+      // console.log("players: " + JSON.stringify(PLAYERS));
       socket.join(data.room, function(){
         io.to(data.room).emit('newPlay', {
           players: ROOMS[data.room].players
@@ -241,7 +241,10 @@ io.sockets.on('connection', function(socket){
   socket.on('active true', function(data){
     PLAYERS[data.pID].active = true;
     console.log("active status of " + PLAYERS[data.pID].name + " is now: " + PLAYERS[data.pID].active);
-    // only used once in beginning
+    // only used once in 
+    io.to(data.room).emit('active', {
+      playerT: PLAYERS[data.pID].name
+    });
   });
 
   /**
@@ -332,7 +335,17 @@ io.sockets.on('connection', function(socket){
     });
   });
 
-
+  /**
+      * @desc change players states on client side
+      * @param data = {Array: names}, {string: state}, {string: room} - list of players in room to change to which state
+    */
+  socket.on('change others', function(data){
+    // emit to whole room
+    io.to(data.room).emit('change state', {
+      names: data.names,
+      state: data.state,
+    });
+  });
 
 
   /**
@@ -347,8 +360,8 @@ io.sockets.on('connection', function(socket){
       // console.log(p);
       // console.log(deal(ROOMS[data.room].tiles));
 
-      console.log(ROOMS[data.room].players[p].name + " has tiles: ");
-      console.log(ROOMS[data.room].players[p].tiles);
+      // console.log(ROOMS[data.room].players[p].name + " has tiles: ");
+      // console.log(ROOMS[data.room].players[p].tiles);
 
       io.to(ROOMS[data.room].players[p].id).emit('display tiles', {
         tiles: ROOMS[data.room].players[p].tiles,
@@ -396,8 +409,8 @@ io.sockets.on('connection', function(socket){
     }
     ROOMS[data.room].steal = true; // players can now steal tiles from discard
 
-    console.log("discard pile: ")
-    console.log(ROOMS[data.room].discard);
+    // console.log("discard pile: ")
+    // console.log(ROOMS[data.room].discard);
 
     io.to(data.pID).emit('display tiles', {
       tiles: PLAYERS[data.pID].tiles,

@@ -81,17 +81,20 @@ body{
 }
 .srev{
     height: 80%;
-    margin-top: 1%;
+    margin-top: 5%;
 }
 .buttons{
     align-items: center;
-    padding: 5%;
-    margin-top: 2%;
+    margin-top: 20%;
 }
 .btn{
-    width: 70%;
-    margin-left: 25%;
-    margin-top: 5%;
+    width: 100%;
+    /* margin-left: 25%;*/
+    margin-top: 5%; 
+}
+.btn-primary{
+    width: 45% !important;
+    margin: 2%;
 }
 #west{
     margin-top: 5%;

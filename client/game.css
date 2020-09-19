@@ -156,7 +156,7 @@
     border-color: pink;
     border-style: solid;
     border-radius: 5px;
-    opacity: 100%;
+    opacity: 100% !important;
 }
 /* --------self stuff----------*/
 .rev{
@@ -177,8 +177,8 @@
     margin-top: 2%;
 }
 .btn-primary{
-    width: 70%;
-    margin-left: 25%;
+    width: 100%;
+    /* margin-left: 25%; */
     margin-top: 5%;
     background-color: gray;
     border-color: green;
@@ -194,6 +194,10 @@
     background-color: gray;
     opacity: 50%;
     border-color: gray;
+}
+.hid{
+    width: 45% !important;
+    margin: 2%;
 }
 .hand{
     height: 80%;
