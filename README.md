@@ -54,7 +54,7 @@ on ('connection')
 - active true
   - data: pID (string), name (string) -- player ID and player name
   - descr: change player's active status to true
-  - call to client: N/A
+  - call to client: active
 - active false
   - data: pID (string), name (string) -- player ID and player name
   - descr: change player's active status to false
@@ -62,16 +62,20 @@ on ('connection')
 - active switch
   - data: pID (string), room (string) -- player ID and room name
   - descr: change player's active status to false and the next player's active status to true
-  - call to client: N/A
-- active swtich steal
+  - call to client: active
+- active switch steal
   - data: pID (string), room (string) -- player ID and room name
   - descr: change current player's active status to false and the active status of the player who stole to true
-  - call to client: N/A
-- active swtich cancel
+  - call to client: active
+- active switch cancel
   - data: pID (string), room (string) -- player ID and room name
   - descr: change current player's acive status to false and the previous active player's active status to true
-  - call to client: N/A
-     
+  - call to client: active
+- change others
+  - data: names (Array), state (string), room (string) -- player names, state name, room name
+  - descr: emit to the rest of the room for player state changes
+  - call to client: change state
+
 - deal
   - data: room (string) -- room name
   - descr: deal cards to every player in the room
@@ -200,6 +204,15 @@ Socket Functions
 - display  tiles
   - data: tiles (array of strings), message (string) -- list/dict of the player's tiles/hand and the message/description of the tiles 
   - descr: display the player's tiles/hand
+- update discard
+  - data: tile (string) -- tile last discarded
+  - descr: change the discard pile on each screen to highlight last discarded
+- change state
+  - data: names (Array), state (string) -- list of player names that should change to named state
+  - descr: changes the state of this client if Name exists in the list
+- active
+  - data: playerT (string), playerF (string) -- name of players who turn active and inactive
+  - descr: changes asterick display based on who is active and who isn't
 - message
   - data: message (string) -- message to print
   - descr: display message on player's console
@@ -247,10 +260,12 @@ Event Functions
     - so, creates a new player, because previously w accept.onclick(), we call reset, which deletes the Players
 
 Helper Functions
+- clearBoard
+  - descr: clears the discard highlights
 - choose
   - descr: decides what happens when you click a tile based on State
   - param: tile name, id number
-- setButtons
+- changeState
   - descr: changes buttons based on State
   - param: state name
 
@@ -318,7 +333,7 @@ Game Room <br>
   - not on your turn
 - If you click "discard"
   - on your turn
-  - not on your turn
+  - not on your turn 
 - If you click on "steal"
   - when steal flag is false
   - when steal flag is true
@@ -353,6 +368,7 @@ on draw
 on steal
 - reveal
 - cancel
+- win
 
 
 on reveal
