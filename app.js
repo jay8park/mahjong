@@ -61,7 +61,7 @@ var availableTiles = {
   "b7" : 0,
   "b8" : 0,
   "b9" : 0,
-  
+
   "a1" : 0, //east
   "a2" : 0, //south
   "a3" : 0, //west
@@ -70,12 +70,12 @@ var availableTiles = {
   "a6" : 0, //blank
   "a7" : 0, //center
 };
-var tiles = ["s1", "s1", "s1", "s1", "s2", "s2", "s2", "s2", "s3", "s3", "s3", "s3", "s4", "s4", "s4", "s4", "s5", "s5", "s5", "s5", 
-"s6", "s6", "s6", "s6", "s7", "s7", "s7", "s7", "s8", "s8", "s8", "s8", "s9", "s9", "s9", "s9", "c1", "c1", "c1", "c1", "c2", "c2", "c2", "c2", 
-"c3", "c3", "c3", "c3", "c4", "c4", "c4", "c4", "c5", "c5", "c5", "c5", "c6", "c6", "c6", "c6", "c7", "c7", "c7", "c7", "c8", "c8", "c8", "c8", 
-"c9", "c9", "c9", "c9", "b1", "b1", "b1", "b1", "b2", "b2", "b2", "b2", "b3", "b3", "b3", "b3", "b4", "b4", "b4", "b4", "b5", "b5", "b5", "b5", 
-"b6", "b6", "b6", "b6", "b7", "b7", "b7", "b7", "b8", "b8", "b8", "b8", "b9", "b9", "b9", "b9", "a1", "a1", "a1", "a1", 
-"a2", "a2", "a2", "a2", "a3", "a3", "a3", "a3", "a4", "a4", "a4", "a4", "a5", "a5", "a5", "a5", 
+var tiles = ["s1", "s1", "s1", "s1", "s2", "s2", "s2", "s2", "s3", "s3", "s3", "s3", "s4", "s4", "s4", "s4", "s5", "s5", "s5", "s5",
+"s6", "s6", "s6", "s6", "s7", "s7", "s7", "s7", "s8", "s8", "s8", "s8", "s9", "s9", "s9", "s9", "c1", "c1", "c1", "c1", "c2", "c2", "c2", "c2",
+"c3", "c3", "c3", "c3", "c4", "c4", "c4", "c4", "c5", "c5", "c5", "c5", "c6", "c6", "c6", "c6", "c7", "c7", "c7", "c7", "c8", "c8", "c8", "c8",
+"c9", "c9", "c9", "c9", "b1", "b1", "b1", "b1", "b2", "b2", "b2", "b2", "b3", "b3", "b3", "b3", "b4", "b4", "b4", "b4", "b5", "b5", "b5", "b5",
+"b6", "b6", "b6", "b6", "b7", "b7", "b7", "b7", "b8", "b8", "b8", "b8", "b9", "b9", "b9", "b9", "a1", "a1", "a1", "a1",
+"a2", "a2", "a2", "a2", "a3", "a3", "a3", "a3", "a4", "a4", "a4", "a4", "a5", "a5", "a5", "a5",
 "a6", "a6", "a6", "a6", "a7", "a7", "a7", "a7"];
 
 // ----------------------------------------------------------------------------
@@ -241,7 +241,7 @@ io.sockets.on('connection', function(socket){
   socket.on('active true', function(data){
     PLAYERS[data.pID].active = true;
     console.log("active status of " + PLAYERS[data.pID].name + " is now: " + PLAYERS[data.pID].active);
-    // only used once in 
+    // only used once in
     io.to(data.room).emit('active', {
       playerT: PLAYERS[data.pID].name
     });
@@ -341,6 +341,7 @@ io.sockets.on('connection', function(socket){
       * @param data = {Array: names}, {string: state}, {string: room} - list of players in room to change to which state
     */
   socket.on('change others', function(data){
+    console.log("CHANGE OTHERS")
     // emit to whole room
     io.to(data.room).emit('change state', {
       names: data.names,
@@ -496,7 +497,7 @@ io.sockets.on('connection', function(socket){
     }
     else {
       console.log("cannot complete set");
-      io.to(data.pID).emit('player revealed tiles', {
+      io.to(data.pID).emit('message', {
         message: "cannot complete set"
       });   // print message on client side
     }
@@ -529,6 +530,10 @@ io.sockets.on('connection', function(socket){
     io.to(data.pID).emit('display tiles', {
       tiles: PLAYERS[data.pID].tiles,
       message: "cancel"
+    });   // return the list of tiles to the player's screen
+
+    io.to(data.room).emit('update discard', {
+      tile: ROOMS[data.room].last,
     });   // return the list of tiles to the player's screen
   });
 
