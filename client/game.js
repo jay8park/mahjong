@@ -35,10 +35,6 @@ socket.emit('newJoin', {
 });
 
 
-// socket. emit('active') {
-  // room: Room
-// }
-
 // ----------------------------------------------------------------------------
 // START BUTTON
 // ----------------------------------------------------------------------------
@@ -69,7 +65,7 @@ start.onclick = function(){
 
             // set the player who clicked start to be active (it's their turn)
             socket.emit('active true', {
-              pID: socket.id, 
+              pID: socket.id,
               room: Room
             });
 
@@ -216,7 +212,7 @@ topbut.onclick = function(){
       console.log(topbut.value);
     }
   }
-} 
+}
 
 var botbut = document.getElementById('second');
 botbut.onclick = function(){
@@ -238,21 +234,63 @@ botbut.onclick = function(){
     }
     else if(botbut.value == 'win'){
       console.log(botbut.value);
+      socket.emit('win', {
+        pID: socket.id,
+        name: Name,
+        room: Room
+      });
     }
     else if(botbut.value == 'reject'){
       console.log(botbut.value);
+      Winner = "";
     }
   }
-} 
+}
 
 var w = document.getElementById("w");
 w.onclick = function(){
   console.log("player " + Name + " claims win.");
+  // call "win"
+  socket.emit('win', {
+    pID: socket.id,
+    name: Name,
+    room: Room
+  });
+  // change state for everyone else to display accept or reject
+  socket.emit('change others', {
+    names: Players.slice(1),
+    state: "TheyWin",
+    room: Room,
+  })
+  // change my own display to show nothing only
+  changeState("Nothing");
+
 }
 
 var c = document.getElementById("canc");
 c.onclick = function(){
   console.log("cancel");
+  // return the stolen piece
+  socket.emit('cancel', {
+    pID: socket.id,
+    name: Name,
+    room: Room
+  });
+
+  // change the state for other players
+  // also changes everyone's display to be "steal"
+  socket.emit('change others', {
+    names: Players,
+    state: "Steal",
+    room: Room,
+  })
+
+  // request the server side to change the status of the previous actvive player as active
+  // if player stole within turn, it will display proper buttons instead of "steal" state buttons
+  socket.emit('active switch cancel', {
+    pID: socket.id,
+    room: Room
+  });
 }
 
 // ----------------------------------------------------------------------------
@@ -361,11 +399,6 @@ reveal.onclick = function() {
     room: Room,
     tiles: tiles
   });
-
-  // the following doesn't work
-  // enable discard button
-  var discard = document.getElementById('discard');
-  discard.disable = false;
 }
 
 
@@ -403,7 +436,7 @@ var win = document.getElementById('win');
  */
 win.onclick = function() {
   console.log("win");
-  // return the stolen piece
+  // check tile count for potential win
   socket.emit('win', {
     pID: socket.id,
     name: Name,
@@ -510,8 +543,8 @@ socket.on('display tiles', function(data){
   // }
   var id = 0;
   for(var t in data.tiles){
-    document.getElementById("hand").innerHTML += 
-    "<input type='image' class='hand' src='/client/img/" + data.tiles[t] + 
+    document.getElementById("hand").innerHTML +=
+    "<input type='image' class='hand' src='/client/img/" + data.tiles[t] +
     ".svg' onclick='choose("+id+")' id='"+id+"'>";
     if(theone != "none" && theone == data.tiles[t] && !done){
       document.getElementById(id).classList.add("choose");
@@ -519,7 +552,7 @@ socket.on('display tiles', function(data){
       selected.push(id);
       done = true;
     }
-      
+
     id += 1;
   }
   // update player Tiles
@@ -566,8 +599,8 @@ socket.on('display revealed', function(data){
  */
 socket.on('update discard', function(data){
   console.log("last discarded: " + data.tile);
-  clearBoard();    
-  document.getElementById(data.tile).classList.add('grab'); // highlight last discarded  
+  clearBoard();
+  document.getElementById(data.tile).classList.add('grab'); // highlight last discarded
 });
 
 /**
@@ -587,31 +620,12 @@ socket.on('change state', function(data){
   * @param data = {string: playerT, string: playerF, boolean: inturn} - the player whos turn it is, the player whos turn it was
  */
 socket.on('active', function(data){
+  console.log("in the active client side function");
+  console.log("t player: " + data.playerT + ",   f player: " + data.playerF);
+  console.log("player[0]: " + Players[0]);
   var t = data.playerT;
   var f = data.playerF;
   var ID = "";
-  if(t == Players[0]){
-    Active = true;
-    ID = "none";
-  }
-  else if(t == Players[1]){
-    ID = "leftname";
-  }
-  else if(t == Players[2]){
-    ID = "topname";
-  }
-  else if(t == Players[3]){
-    ID = "rightname";
-  }
-  else{
-    ID = "none";
-  }
-  if(ID != "none"){
-    document.getElementById(ID).innerHTML += "*";
-  }
-
-  ID = "";
-  var n = "";
   if(f == Players[0]){
     Active = false;
     ID = "none";
@@ -632,7 +646,29 @@ socket.on('active', function(data){
     document.getElementById(ID).innerText = data.playerF;
   }
 
+  ID = "";
+  if(t == Players[0]){
+    Active = true;
+    ID = "none";
+  }
+  else if(t == Players[1]){
+    ID = "leftname";
+  }
+  else if(t == Players[2]){
+    ID = "topname";
+  }
+  else if(t == Players[3]){
+    ID = "rightname";
+  }
+  else{
+    ID = "none";
+  }
+  if(ID != "none"){
+    document.getElementById(ID).innerHTML += "*";
+  }
+
   if(Active){
+    console.log("I'm active")
     document.getElementById('astat').innerHTML = "<b>*</b>";
     if(data.inturn != null){ // case of the first turn
       if(data.inturn){
@@ -688,6 +724,7 @@ socket.on('to finish', function(){
 
 /**
   * @desc clear discard board to not highlight anything
+  * should occur after a steal
  */
 function clearBoard(){
   var actives = document.getElementsByClassName("grab"); // get current highlighted
@@ -695,9 +732,9 @@ function clearBoard(){
   if(actives.length > 0){
     // should really only have one element at a time
     actives[0].classList.remove('grab');
-  } 
+  }
 }
- 
+
 
 /**
   * @desc decide what happens when you click a tile
@@ -740,6 +777,8 @@ function choose(id){
   * @param s = string{State}
  */
 function changeState(s){
+  console.log("in changestate");
+  console.log("state: " + s);
   State = s;
   var top = document.getElementById("first");
   var bottom = document.getElementById("second");
