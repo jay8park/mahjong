@@ -386,3 +386,19 @@ steal flag
 - false when player draws
 - false when player stea;s
 - true when player cancels
+
+
+game.js states:
+- nothing 
+  - disables buttons
+- steal
+  - enables steal button
+- inturn
+  - enable steal or draw
+- discard 
+  - happens right after you draw, so enable discard button
+- reveal
+  - enable reveal button
+- four
+  - when you reveal four, you have an extra chance to draw
+  - so, enable draw
