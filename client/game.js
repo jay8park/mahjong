@@ -7,7 +7,7 @@ var Name = "";
 var Active = false; // is it the current players turn or not
 var Players = []; // list of names of other players in the same room; order is [me, left, top, right]
 var State = "Nothing" // state of current player to determine which buttons are active; 
-// Steal, InTurn, Discard, Reveal, Four, MeWin, TheyWin -- see changeState(s)
+// Steal, InTurn, Discard, Reveal, Four, TheyWin -- see changeState(s)
 var Tiles = [];
 var Winner = "";
 var selected = []; // list of selected tiles in your hand by id
@@ -170,7 +170,27 @@ topbut.onclick = function(){
       }
     }
     else if(topbut.value == 'reveal'){
-      console.log(topbut.value);
+      if(selected.length < 3){
+        console.log("not enough tiles");
+      }
+      else{
+        var l = [];
+        for(var i in selected){
+          l.push(Tiles[selected[i]]);
+        }
+        // call server
+        socket.emit('reveal', {
+          pID: socket.id,
+          name: Name,
+          room: Room,
+          tiles: l
+        });
+        // if error
+        socket.on("cannot reveal", function(data){
+          console.log(data.message);
+        });
+      }
+      
     }
     else if(topbut.value == 'steal'){
       // call server
@@ -508,6 +528,39 @@ socket.on('display tiles', function(data){
 });
 
 /**
+  * @desc display player's revealed tiles 
+  * @param data = {Array: tiles, string: pname} - list of the player's revealed tiles (strings), name of player who revealed
+ */
+socket.on('display revealed', function(data){
+  var element;
+  var clas = "";
+  if(data.pname == Name){
+    element = document.getElementById("rev");
+    clas = "srevtiles";
+    changeState("Discard");
+  }
+  else if(data.pname == Players[1]){ // left
+    element = document.getElementById("wrev");
+    clas = "wrevtiles";
+  }
+  else if(data.pname == Players[2]){ // top
+    element = document.getElementById("nrev");
+    clas = "nrevtiles";
+  }
+  else if(data.pname == Players[3]){ // right
+    element = document.getElementById("erev");
+    clas = "erevtiles";
+  }
+  for(var t in data.tiles){
+    for(var i in data.tiles[t]){
+      element.innerHTML += 
+      "<img class='"+clas+"' src='/client/img/"+data.tiles[t][i]+".svg'></img>";
+    }      
+  }
+  
+});
+
+/**
   * @desc update the discard pile
   * @param data = {String: tile} - the name of the tile last discarded
  */
@@ -675,6 +728,9 @@ function choose(id){
       }
       document.getElementById(id).classList.add("choose");
       selected.push(id);
+      if(selected.length == 3){
+        document.getElementById("first").disabled = false;
+      }
     }
   }
 }
@@ -724,18 +780,14 @@ function changeState(s){
       bottom.disabled = false;
       bottom.value = "win";
       break;
-    case "Reveal": // reveal or cancel
-      top.disabled = false;
+    case "Reveal": // reveal or cancel or win
+      top.disabled = true;
       top.value = "reveal";
       break;
     case "Four": // draw
       top.disabled = true;
       bottom.disabled = false;
       bottom.value = "draw";
-      break;
-    case "MeWin": 
-      top.disabled = true;
-      bottom.disabled = true;
       break;
     case "TheyWin": //accept or reject
       top.disabled = false;

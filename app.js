@@ -486,17 +486,18 @@ io.sockets.on('connection', function(socket){
 
       io.to(data.pID).emit('display tiles', {
         tiles: PLAYERS[data.pID].tiles,
-        message: "reveal"
+        message: "reveal" // not needed ?
       });   // return the list of tiles to the player's screen
 
-      io.to(data.pID).emit('display tiles', {
-        message: "revealed tiles",
-        tiles: PLAYERS[data.pID].revealed
-      });   // return the list of tiles to the player's screen
+      io.to(data.room).emit('display revealed', {
+        message: "revealed tiles", // not needed?
+        tiles: PLAYERS[data.pID].revealed,
+        pname: data.name
+      });   // return the list of sets of tiles to the player's screen
     }
     else {
       console.log("cannot complete set");
-      io.to(data.pID).emit('player revealed tiles', {
+      io.to(data.pID).emit('cannot reveal', {
         message: "cannot complete set"
       });   // print message on client side
     }
