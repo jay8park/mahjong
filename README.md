@@ -20,7 +20,7 @@ Player:
 
 Room:
 - id -- string -- room code
-- players -- list of strings -- list of the player's name
+- players -- list of objects -- list of the player objects
 - tiles -- list of strings -- the list of available tiles for this room
 - discard -- list of strings -- the list of dicarded tiles
 - last -- string -- the last discarded tile 
