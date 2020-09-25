@@ -372,9 +372,6 @@ io.sockets.on('connection', function(socket){
     }
   });
 
-
-
-
   /**
     * @desc draw a tile from the room's tiles list (take from top)
     * @param data = {string: pID}, {string: name}, {string: room} -player ID, player name, and room name
@@ -449,7 +446,7 @@ io.sockets.on('connection', function(socket){
     * @param data = {string: pID}, {string: name}, {string: room}, {Array: tiles} - player ID, player name, room name, array of tiles to reveal (string)
   */
   socket.on('reveal', function(data){
-    console.log(data.name + " is revealing");
+    console.log(data.name + " is revealing " + data.tiles.length + " tiles.");
 
     // check if its a completed set
     var completed = false;
@@ -491,14 +488,14 @@ io.sockets.on('connection', function(socket){
       });   // return the list of tiles to the player's screen
 
       io.to(data.room).emit('display revealed', {
-        message: "revealed tiles", // not needed?
+        message: "reveal", // not needed?
         tiles: PLAYERS[data.pID].revealed,
         pname: data.name
       });   // return the list of sets of tiles to the player's screen
     }
     else {
       console.log("cannot complete set");
-      io.to(data.pID).emit('cannot reveal', {
+      io.to(data.pID).emit('message', {
         message: "cannot complete set"
       });   // print message on client side
     }
@@ -539,31 +536,69 @@ io.sockets.on('connection', function(socket){
   });
 
   /**
-    * @desc check if total tile count is at least 14, and return respective message to client
-    * @param data = {string: pID}, {string: name}, {string: room} - player ID, player name, and room name
+    * @desc display players cards on everyone's screen when they claim win
+    * @param data = {string: pID}, {string: room} - player ID and room name
   */
-  socket.on('win', function(data){
-    console.log(data.name + " won?");
-    var possibleWin = false;
-    if (PLAYERS[data.pID].tiles.length + PLAYERS[data.pID].revealTileCount >= 14) {
-      possibleWin = true;
-    }
+  socket.on('claimed win', function(data){
+    console.log(PLAYERS[data.pID].name + " won?");
+    io.to(data.room).emit('display revealed', {
+      pname: PLAYERS[data.pID].name,
+      tiles: [PLAYERS[data.pID].tiles],
+      message: "win",
+      pID: data.pID,
+    });
+    // var possibleWin = false;
+    // if (PLAYERS[data.pID].tiles.length + PLAYERS[data.pID].revealTileCount >= 14) {
+    //   possibleWin = true;
+    // }
 
-    if (possibleWin) {
-      // send to entire room
-      io.to(data.room).emit('won', {
-        name: data.name,
-        tiles: PLAYERS[data.pID].tiles,
-        revealed: PLAYERS[data.pID].revealed
-      });
-    }
-    else {
-      // send to player
-      io.to(data.pID).emit('message', {
-        message: "not enough tiles to win"
-      });   // return the list of tiles to the player's screen
-    }
+    // if (possibleWin) {
+    //   // send to entire room
+    //   io.to(data.room).emit('won', {
+    //     name: data.name,
+    //     tiles: PLAYERS[data.pID].tiles,
+    //     revealed: PLAYERS[data.pID].revealed
+    //   });
+    // }
+    // else {
+    //   // send to player
+    //   io.to(data.pID).emit('message', {
+    //     message: "not enough tiles to win"
+    //   });   // return the list of tiles to the player's screen
+    // }
   });
+
+  /**
+    * @desc win was rejected, reset state
+    * @param data = {string: room, string: pID} - room name and winner's ID
+  */
+ socket.on('reject win', function(data){
+  console.log("reject " + PLAYERS[data.pID].name);
+  var winnerName = PLAYERS[data.pID].name;
+  // change revealed tiles
+  io.to(data.room).emit('display revealed', {
+    message: "reject", 
+    pname: winnerName,
+    tiles: PLAYERS[data.pID].revealed,
+  });
+  // change state of the winner
+  io.to(data.room).emit('change state', {
+    names: [winnerName],
+    state: "Discard",
+  });
+  // change state of everyone else
+  var roomPlayers = ROOMS[data.room].players;
+  var playersCopy = [];
+  for(var i in roomPlayers){
+    if(winnerName != roomPlayers[i].name){
+      playersCopy.push(roomPlayers[i].name);
+    }
+  }
+  io.to(data.room).emit('change state', {
+    names: playersCopy,
+    state: "Nothing",
+  });
+ });
 
   /**
     * @desc reset game state

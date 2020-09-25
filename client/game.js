@@ -9,7 +9,7 @@ var Players = []; // list of names of other players in the same room; order is [
 var State = "Nothing" // state of current player to determine which buttons are active; 
 // Steal, InTurn, Discard, Reveal, Four, TheyWin -- see changeState(s)
 var Tiles = [];
-var Winner = "";
+var Winner = []; // [name, pID]
 var selected = []; // list of selected tiles in your hand by id
 
 //getting URL query data
@@ -94,7 +94,7 @@ socket.on('start', function(data){
     if(data.message){
       // set the names for each player
       var index = data.players.findIndex(x => x.name === Name);
-      console.log("index: " + index);
+      // console.log("index: " + index);
       var left = data.players[(index+1)%4].name;
       var top = data.players[(index+2)%4].name;
       var right = data.players[(index+3)%4].name;
@@ -128,7 +128,7 @@ var leave = document.getElementById('leave');
   * @desc leave the room if the player clicks the "leave" button
  */
 leave.onclick = function() {
-  console.log("leave");
+  // console.log("leave");
   window.location.href = "/";   // redirect to home page
   //should call disconnect
 }
@@ -142,8 +142,10 @@ var topbut = document.getElementById('first');
 topbut.onclick = function(){
   if(!topbut.disabled){
     if(topbut.value == 'discard'){
+      console.log("selected: " + selected);
       if(selected.length == 1){ // if they didn't choose one, do nothing
-        var tile = Tiles[selected[0]];
+        var pop = selected.shift();
+        var tile = Tiles[pop];
         // set the active status of the player false and the next player's active status to true
         socket.emit('active switch', {
           pID: socket.id,
@@ -166,6 +168,7 @@ topbut.onclick = function(){
       }
     }
     else if(topbut.value == 'reveal'){
+      // console.log("selected length: " + selected.length);
       if(selected.length < 3){
         console.log("not enough tiles");
       }
@@ -180,10 +183,6 @@ topbut.onclick = function(){
           name: Name,
           room: Room,
           tiles: l
-        });
-        // if error
-        socket.on("cannot reveal", function(data){
-          console.log(data.message);
         });
       }
       
@@ -200,16 +199,20 @@ topbut.onclick = function(){
         pID: socket.id,
         room: Room
       });
+      // everyone else state to nothing
       socket.emit('change others', {
         names: Players.slice(1),
         state: "Nothing",
         room: Room,
       });
-      clearBoard();
+      clearBoard(); // remove discarded highlight
       changeState("Reveal");
     }
     else if(topbut.value == 'accept'){
-      console.log(topbut.value);
+      // confirm win and change game state
+      socket.emit('reset', {
+        room: Room
+      });
     }
   }
 }
@@ -233,43 +236,55 @@ botbut.onclick = function(){
       changeState("Discard");
     }
     else if(botbut.value == 'win'){
-      console.log(botbut.value);
-      socket.emit('win', {
+      // console.log("player " + Name + " claims win.");
+      // tell server someone claimed to win
+      socket.emit('claimed win', {
         pID: socket.id,
-        name: Name,
-        room: Room
+        room: Room,
       });
+      // change state for everyone else to display accept or reject
+      socket.emit('change others', {
+        names: Players.slice(1),
+        state: "TheyWin",
+        room: Room,
+      });
+      // change my own display to show nothing only
+      changeState("Nothing");
+      Winner = [Name, socket.id];
     }
     else if(botbut.value == 'reject'){
-      console.log(botbut.value);
-      Winner = "";
+      // console.log(botbut.value);
+      socket.emit('reject win', {
+        pID: Winner[1],
+        room: Room
+      });
+      Winner = [];
     }
   }
 }
 
 var w = document.getElementById("w");
 w.onclick = function(){
-  console.log("player " + Name + " claims win.");
-  // call "win"
-  socket.emit('win', {
+  // console.log("player " + Name + " claims win.");
+  // tell server someone claimed to win
+  socket.emit('claimed win', {
     pID: socket.id,
-    name: Name,
-    room: Room
+    room: Room,
   });
   // change state for everyone else to display accept or reject
   socket.emit('change others', {
     names: Players.slice(1),
     state: "TheyWin",
     room: Room,
-  })
+  });
   // change my own display to show nothing only
   changeState("Nothing");
-
+  Winner = [Name, socket.id];
 }
 
 var c = document.getElementById("canc");
 c.onclick = function(){
-  console.log("cancel");
+  // console.log("cancel");
   // return the stolen piece
   socket.emit('cancel', {
     pID: socket.id,
@@ -291,6 +306,8 @@ c.onclick = function(){
     pID: socket.id,
     room: Room
   });
+
+  selected = []; // clear selected tiles
 }
 
 // ----------------------------------------------------------------------------
@@ -455,7 +472,7 @@ var reject = document.getElementById('reject');
  */
 reject.onclick = function() {
   console.log("rejecting win");
-  Winner = "";
+  Winner = [];
 }
 
 // ----------------------------------------------------------------------------
@@ -534,8 +551,14 @@ socket.on('display tiles', function(data){
   //console.log("message: " + data.message);
   var theone = "none";
   var done = false;
+  // console.log("in display tiles message: " + data.message);
   if(data.message == "steal"){
     theone = data.tile;
+  }
+  if(data.message == "reveal"){
+    // successful reveal
+    // clear selected array
+    selected = [];
   }
   document.getElementById("hand").innerHTML = "";
   // if(Active){
@@ -547,12 +570,12 @@ socket.on('display tiles', function(data){
     "<input type='image' class='hand' src='/client/img/" + data.tiles[t] +
     ".svg' onclick='choose("+id+")' id='"+id+"'>";
     if(theone != "none" && theone == data.tiles[t] && !done){
+      // console.log("selected id= " + id);
       document.getElementById(id).classList.add("choose");
-      document.getElementById(id).disabled = true;
+      // document.getElementById(id).disabled = true; not sure if this does anything
       selected.push(id);
       done = true;
     }
-
     id += 1;
   }
   // update player Tiles
@@ -562,15 +585,22 @@ socket.on('display tiles', function(data){
 
 /**
   * @desc display player's revealed tiles 
-  * @param data = {Array: tiles, string: pname} - list of the player's revealed tiles (strings), name of player who revealed
+  * @param data = {Array: tiles, string: pname, string: message} - 
+  * list of the player's revealed tiles (strings), name of player who revealed, message: state it was called in (reveal or win)
  */
 socket.on('display revealed', function(data){
   var element;
   var clas = "";
+  if(data.message == "win"){
+    console.log("winner id: " + data.pID);
+    Winner = [data.pname, data.pID];
+  }
   if(data.pname == Name){
     element = document.getElementById("rev");
     clas = "srevtiles";
-    changeState("Discard");
+    if(data.message == "reveal"){
+      changeState("Discard");
+    }
   }
   else if(data.pname == Players[1]){ // left
     element = document.getElementById("wrev");
@@ -584,13 +614,17 @@ socket.on('display revealed', function(data){
     element = document.getElementById("erev");
     clas = "erevtiles";
   }
+  console.log("reveal tiles: " + data.tiles);
+  if(data.message == "reject"){
+    // console.log("clear the rev for " + clas);
+    element.innerHTML = "";
+  }
   for(var t in data.tiles){
     for(var i in data.tiles[t]){
       element.innerHTML += 
       "<img class='"+clas+"' src='/client/img/"+data.tiles[t][i]+".svg'></img>";
     }      
   }
-  
 });
 
 /**
@@ -598,7 +632,7 @@ socket.on('display revealed', function(data){
   * @param data = {String: tile} - the name of the tile last discarded
  */
 socket.on('update discard', function(data){
-  console.log("last discarded: " + data.tile);
+  // console.log("last discarded: " + data.tile);
   clearBoard();
   document.getElementById(data.tile).classList.add('grab'); // highlight last discarded
 });
@@ -608,6 +642,7 @@ socket.on('update discard', function(data){
   * @param data = {Array: names}, {string, state} - the name of the tile last discarded
  */
 socket.on('change state', function(data){
+  // console.log("reject list: " + data.names);
   for(var i in data.names){
     if(data.names[i] == Name){
       changeState(data.state);
@@ -620,9 +655,9 @@ socket.on('change state', function(data){
   * @param data = {string: playerT, string: playerF, boolean: inturn} - the player whos turn it is, the player whos turn it was
  */
 socket.on('active', function(data){
-  console.log("in the active client side function");
-  console.log("t player: " + data.playerT + ",   f player: " + data.playerF);
-  console.log("player[0]: " + Players[0]);
+  // console.log("in the active client side function");
+  // console.log("t player: " + data.playerT + ",   f player: " + data.playerF);
+  // console.log("player[0]: " + Players[0]);
   var t = data.playerT;
   var f = data.playerF;
   var ID = "";
@@ -668,7 +703,7 @@ socket.on('active', function(data){
   }
 
   if(Active){
-    console.log("I'm active")
+    // console.log("I'm active");
     document.getElementById('astat').innerHTML = "<b>*</b>";
     if(data.inturn != null){ // case of the first turn
       if(data.inturn){
@@ -697,21 +732,21 @@ socket.on('message', function(data){
   * @desc display winning details
   * @param data = {string: name}, {Array: tiles}, {Array: revealed} - winning player's name, winning player's tiles in hand (string list), winning player's revealed tiles (list of string lists)
  */
-socket.on('won', function(data){
-  Winner = data.name;
-  console.log(data.name + " has won");
-  console.log("revealed tiles: ");
-  console.log(data.revealed);
-  console.log("tiles in hand: ");
-  console.log(data.tiles);
-});
+// socket.on('won', function(data){
+//   Winner = data.name;
+//   console.log(data.name + " has won");
+//   console.log("revealed tiles: ");
+//   console.log(data.revealed);
+//   console.log("tiles in hand: ");
+//   console.log(data.tiles);
+// });
 
 /**
   * @desc change display to finished display
  */
 socket.on('to finish', function(){
   document.getElementById('room2').innerText += " " + Room;
-  document.getElementById('winner').innerText += " " + Winner;
+  document.getElementById('winner').innerText += " " + Winner[0];
   document.getElementById('game').classList.add('d-none');
   document.getElementById('finished').classList.remove('d-none');
   document.getElementById('players').innerHTML = "";
@@ -728,13 +763,12 @@ socket.on('to finish', function(){
  */
 function clearBoard(){
   var actives = document.getElementsByClassName("grab"); // get current highlighted
-  console.log(actives.length);
+  // console.log(actives.length);
   if(actives.length > 0){
     // should really only have one element at a time
     actives[0].classList.remove('grab');
   }
 }
-
 
 /**
   * @desc decide what happens when you click a tile
@@ -754,11 +788,11 @@ function choose(id){
     selected.push(id);
   }
   else if(State == "Reveal"){
-    if(document.getElementById(id).classList.contains("choose")){
+    if(document.getElementById(id).classList.contains("choose") && id != selected[0]){
       document.getElementById(id).classList.remove("choose");
       selected.splice(selected.indexOf(id), 1);
     }
-    else{
+    else if(id != selected[0]){
       if(selected.length >= 3){
         var temp = selected.splice(1,1); // remove the second one bc the first should be permanent
         document.getElementById(temp).classList.remove("choose");
@@ -777,7 +811,7 @@ function choose(id){
   * @param s = string{State}
  */
 function changeState(s){
-  console.log("in changestate");
+  //console.log("in changestate");
   console.log("state: " + s);
   State = s;
   var top = document.getElementById("first");
