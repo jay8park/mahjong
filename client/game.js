@@ -214,11 +214,7 @@ botbut.onclick = function(){
     }
     else if(botbut.value == 'win'){
       console.log(botbut.value);
-      socket.emit('win', {
-        pID: socket.id,
-        name: Name,
-        room: Room
-      });
+      win();
     }
     else if(botbut.value == 'reject'){
       console.log(botbut.value);
@@ -230,21 +226,7 @@ botbut.onclick = function(){
 var w = document.getElementById("w");
 w.onclick = function(){
   console.log("player " + Name + " claims win.");
-  // call "win"
-  socket.emit('win', {
-    pID: socket.id,
-    name: Name,
-    room: Room
-  });
-  // change state for everyone else to display accept or reject
-  socket.emit('change others', {
-    names: Players.slice(1),
-    state: "TheyWin",
-    room: Room,
-  })
-  // change my own display to show nothing only
-  changeState("Nothing");
-
+  win();
 }
 
 var c = document.getElementById("canc");
@@ -271,6 +253,24 @@ c.onclick = function(){
     pID: socket.id,
     room: Room
   });
+}
+
+function win(){
+  // call "win"
+  console.log("WIN FUNCTION");
+  socket.emit('win', {
+    pID: socket.id,
+    name: Name,
+    room: Room
+  });
+  // change state for everyone else to display accept or reject
+  socket.emit('change others', {
+    names: Players.slice(1),
+    state: "TheyWin",
+    room: Room,
+  })
+  // change my own display to show nothing only
+  changeState("Nothing");
 }
 
 // ----------------------------------------------------------------------------
@@ -721,8 +721,6 @@ function choose(id){
   * @param s = string{State}
  */
 function changeState(s){
-  console.log("in changestate");
-  console.log("state: " + s);
   State = s;
   var top = document.getElementById("first");
   var bottom = document.getElementById("second");
