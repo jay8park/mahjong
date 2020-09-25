@@ -144,10 +144,22 @@ body{
 }
 .disc{
     height: 25%;
-    margin-left: 2.8%;
+    
     background-image: url(img/background.png);
     background-size: 100%;
     opacity: 30%;
+}
+.hunk {
+    margin-left: 2.8%;
+}
+.hunk .badge{
+    position: relative;
+    top: -50px;
+    left: -100px;
+    padding: 5px 10px;
+    border-radius: 50%;
+    background-color: red;
+    color: white;
 }
 #c8{
     border-style: solid;
