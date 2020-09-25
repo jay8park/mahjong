@@ -829,11 +829,7 @@ function choose(id){
   * @param s = string{State}
  */
 function changeState(s){
-<<<<<<< HEAD
-=======
-  //console.log("in changestate");
   console.log("state: " + s);
->>>>>>> 553e1a2b2f47ee7b7c401da3c02c8e67528206dc
   State = s;
   var top = document.getElementById("first");
   var bottom = document.getElementById("second");
