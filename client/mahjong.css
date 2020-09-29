@@ -1,6 +1,5 @@
 *{
     font-family: 'Abel';
-    
 }
 body{
     padding-left: 30px;
@@ -78,6 +77,8 @@ body{
 .discard{
     height: 50%;
     overflow: auto;
+    text-align: center;
+    padding: 1%;
 }
 .srev{
     height: 80%;
@@ -143,23 +144,29 @@ body{
     background-size: 100%;
 }
 .disc{
-    height: 25%;
-    
     background-image: url(img/background.png);
     background-size: 100%;
     opacity: 30%;
+    height: 100%;
 }
 .hunk {
-    margin-left: 2.8%;
+    height: 25%;
+    margin-left: 1%;
+    margin-top: 2.5%;
+    margin-right: 0%;
+    text-align: center;
 }
 .hunk .badge{
     position: relative;
-    top: -50px;
-    left: -100px;
-    padding: 5px 10px;
-    border-radius: 50%;
-    background-color: red;
-    color: white;
+    left: -85%;
+    top: -50%;
+    /* top: -100%;
+    left: 10%; */
+    padding: 5px 10px 5px 8px;
+    border-radius: 90%;
+    background-color: pink;
+    color: pink;
+    width: 20%;
 }
 #c8{
     border-style: solid;

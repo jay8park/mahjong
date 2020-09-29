@@ -145,20 +145,28 @@
     overflow: auto;
 }
 .disc{
-    width: 7%;
+    height: 100%;
     margin-left: 2.8%;
     background-image: url(img/background.png);
     background-size: 100%;
     opacity: 30%;
 }
-.disc .badge{
-    position: absolute;
-    top: -5px;
-    right: -10px;
-    padding: 5px 10px;
-    border-radius: 50%;
-    background-color: red;
-    color: white;
+.hunk {
+    height: 25%;
+    margin-left: 1%;
+    margin-top: 2.5%;
+    margin-right: 0%;
+    text-align: center;
+}
+.hunk .badge{
+    position: relative;
+    left: -85%;
+    top: -50%;
+    padding: 5px 10px 5px 8px;
+    border-radius: 90%;
+    background-color: pink;
+    color: pink;
+    width: 20%;
 }
 .grab{
     border-color: pink;
@@ -222,6 +230,12 @@
 }
 #hand{
     width: 90%;
+}
+
+.drew{
+    border-color: lightgray;
+    border-style: solid;
+    border-radius: 3px;
 }
 .choose{
     border-color: lightgreen;
