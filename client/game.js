@@ -264,50 +264,77 @@ botbut.onclick = function(){
 }
 
 var w = document.getElementById("w");
+
 w.onclick = function(){
-  // console.log("player " + Name + " claims win.");
-  // tell server someone claimed to win
-  socket.emit('claimed win', {
-    pID: socket.id,
-    room: Room,
-  });
-  // change state for everyone else to display accept or reject
-  socket.emit('change others', {
-    names: Players.slice(1),
-    state: "TheyWin",
-    room: Room,
-  });
-  // change my own display to show nothing only
-  changeState("Nothing");
-  Winner = [Name, socket.id];
+  if(w.value == "win"){
+    // console.log("player " + Name + " claims win.");
+    // tell server someone claimed to win
+    socket.emit('claimed win', {
+      pID: socket.id,
+      room: Room,
+    });
+    // change state for everyone else to display accept or reject
+    socket.emit('change others', {
+      names: Players.slice(1),
+      state: "TheyWin",
+      room: Room,
+    });
+    // change my own display to show nothing only
+    changeState("Nothing");
+    Winner = [Name, socket.id];
+  }
+  else if(w.value == "cancel"){
+    for(var i in selected){
+      document.getElementById(selected[i]).classList.remove("choose");
+    }
+    selected = [];
+    changeState("Discard");
+  }
 }
 
 var c = document.getElementById("canc");
 c.onclick = function(){
-  // console.log("cancel");
-  // return the stolen piece
-  socket.emit('cancel', {
-    pID: socket.id,
-    name: Name,
-    room: Room
-  });
+  if(c.value == "cancel"){
+    // return the stolen piece
+    socket.emit('cancel', {
+      pID: socket.id,
+      name: Name,
+      room: Room
+    });
 
-  // change the state for other players
-  // also changes everyone's display to be "steal"
-  socket.emit('change others', {
-    names: Players,
-    state: "Steal",
-    room: Room,
-  })
+    // change the state for other players
+    // also changes everyone's display to be "steal"
+    socket.emit('change others', {
+      names: Players,
+      state: "Steal",
+      room: Room,
+    })
 
-  // request the server side to change the status of the previous actvive player as active
-  // if player stole within turn, it will display proper buttons instead of "steal" state buttons
-  socket.emit('active switch cancel', {
-    pID: socket.id,
-    room: Room
-  });
+    // request the server side to change the status of the previous actvive player as active
+    // if player stole within turn, it will display proper buttons instead of "steal" state buttons
+    socket.emit('active switch cancel', {
+      pID: socket.id,
+      room: Room
+    });
 
-  selected = []; // clear selected tiles
+    selected = []; // clear selected tiles
+  }
+  else if(c.value == "four"){
+    changeState("ChooseFour");
+  }
+  else if(c.value == "reveal"){
+    var l = []; // list of tile names from selected ids
+    for(var i in selected){
+      l.push(Tiles[selected[i]]);
+    }
+    //send to server
+    socket.emit("reveal four", {
+      pID: socket.id,
+      room: Room,
+      tiles: l
+    });
+    
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -601,6 +628,9 @@ socket.on('display revealed', function(data){
     if(data.message == "reveal"){
       changeState("Discard");
     }
+    if(data.message == "four"){
+      changeState("Four");
+    }
   }
   else if(data.pname == Players[1]){ // left
     element = document.getElementById("wrev");
@@ -618,13 +648,20 @@ socket.on('display revealed', function(data){
   if(data.message == "reject"){
     // console.log("clear the rev for " + clas);
     element.innerHTML = "";
+    for(var t in data.tiles){
+      for(var i in data.tiles[t]){
+        element.innerHTML += 
+        "<img class='"+clas+"' src='/client/img/"+data.tiles[t][i]+".svg'></img>";
+      }      
+    }
   }
-  for(var t in data.tiles){
-    for(var i in data.tiles[t]){
+  else{
+    for(var i in data.tiles){
       element.innerHTML += 
-      "<img class='"+clas+"' src='/client/img/"+data.tiles[t][i]+".svg'></img>";
-    }      
+      "<img class='"+clas+"' src='/client/img/"+data.tiles[i]+".svg'></img>";
+    }   
   }
+  
 });
 
 /**
@@ -793,7 +830,7 @@ function choose(id){
       selected.splice(selected.indexOf(id), 1);
     }
     else if(id != selected[0]){
-      if(selected.length >= 3){
+      if(selected.length >= 4){
         var temp = selected.splice(1,1); // remove the second one bc the first should be permanent
         document.getElementById(temp).classList.remove("choose");
       }
@@ -801,6 +838,23 @@ function choose(id){
       selected.push(id);
       if(selected.length == 3){
         document.getElementById("first").disabled = false;
+      }
+    }
+  }
+  else if(State == "ChooseFour"){
+    if(document.getElementById(id).classList.contains("choose")){
+      document.getElementById(id).classList.remove("choose");
+      selected.splice(selected.indexOf(id), 1);
+    }
+    else{
+      if(selected.length >= 4){
+        var temp = selected.splice(0,1); // remove the first one
+        document.getElementById(temp).classList.remove("choose");
+      }
+      document.getElementById(id).classList.add("choose");
+      selected.push(id);
+      if(selected.length == 4){
+        document.getElementById("canc").disabled = false;
       }
     }
   }
@@ -816,10 +870,13 @@ function changeState(s){
   State = s;
   var top = document.getElementById("first");
   var bottom = document.getElementById("second");
+  // bottom two buttons
+  var a = document.getElementById("w");
+  var b = document.getElementById("canc");
   // three button case
   var half = document.getElementById("steals");
   var lower = document.getElementById("lower");
-  if(s == "Reveal"){
+  if(s == "Reveal" || s == "ChooseFour" || s == "Discard"){
     if(!lower.classList.contains('d-none')){
       lower.classList.add('d-none');
     }
@@ -847,15 +904,25 @@ function changeState(s){
       bottom.disabled = false;
       bottom.value = "draw";
       break;
-    case "Discard": // discard or win
+    case "Discard": // discard or win or four
       top.disabled = false;
       top.value = "discard";
-      bottom.disabled = false;
-      bottom.value = "win";
+      a.value = "win";
+      a.disabled = false;
+      b.value = "four";
+      b.disabled = false;
       break;
-    case "Reveal": // reveal or cancel or win
+    case "ChooseFour": // reveal or cancel
+      top.disabled = true;
+      a.value = "cancel";
+      b.disabled = true;
+      b.value = "reveal";
+      break;
+    case "Reveal": // reveal or win or cancel
       top.disabled = true;
       top.value = "reveal";
+      a.value = "win";
+      b.value = "cancel";
       break;
     case "Four": // draw
       top.disabled = true;

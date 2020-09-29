@@ -489,7 +489,7 @@ io.sockets.on('connection', function(socket){
 
       io.to(data.room).emit('display revealed', {
         message: "reveal", // not needed?
-        tiles: PLAYERS[data.pID].revealed,
+        tiles: data.tiles,
         pname: data.name
       });   // return the list of sets of tiles to the player's screen
     }
@@ -501,6 +501,47 @@ io.sockets.on('connection', function(socket){
     }
 
   });
+
+  /**
+    * @desc reveal four hidden tiles
+    * @param data = {string: pID}, {string: room}, {Array: tiles} - player ID, room name, and tiles
+  */
+ socket.on('reveal four', function(data){
+   if(data.tiles.length == 4){
+    if(isIdentical(data.tiles, data.tiles[0])){
+      // remove tiles from hand
+      for (var i = 0; i < data.tiles.length; i++) {
+        for (var k = 0; k < PLAYERS[data.pID].tiles.length; k++) {
+          if (PLAYERS[data.pID].tiles[k] == data.tiles[i]) {
+            PLAYERS[data.pID].tiles.splice(k, 1);
+            break;   // break out of this inner loop, and continue with outer loop
+          }
+        }
+      }
+      PLAYERS[data.pID].revealed.push(data.tiles);    // add completed set list to revealed list
+      PLAYERS[data.pID].revealTileCount += data.tiles.length;
+
+      io.to(data.pID).emit('display tiles', {
+        tiles: PLAYERS[data.pID].tiles,
+        message: "reveal" 
+      });   // return the list of tiles to the player's screen
+
+      io.to(data.room).emit('display revealed', {
+        message: "four", 
+        tiles: ["a6, a6, a6, a6"], //four blanks
+        pname: data.name
+      });   // return the list of sets of tiles to the player's screen
+    }
+    else{
+      io.to(data.pID).emit('message', {
+        message: "did not reveal identical 4" 
+      });   // error message to client
+    }
+   }
+   else{
+     console.log(PLAYERS[data.pID].name + " revealed less than four.");
+   }
+ });
 
   /**
     * @desc remove the stolen tile from hand,
@@ -543,7 +584,7 @@ io.sockets.on('connection', function(socket){
     console.log(PLAYERS[data.pID].name + " won?");
     io.to(data.room).emit('display revealed', {
       pname: PLAYERS[data.pID].name,
-      tiles: [PLAYERS[data.pID].tiles],
+      tiles: PLAYERS[data.pID].tiles,
       message: "win",
       pID: data.pID,
     });
