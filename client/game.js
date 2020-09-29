@@ -6,7 +6,7 @@ var Room = "";
 var Name = "";
 var Active = false; // is it the current players turn or not
 var Players = []; // list of names of other players in the same room; order is [me, left, top, right]
-var State = "Nothing" // state of current player to determine which buttons are active; 
+var State = "Nothing" // state of current player to determine which buttons are active;
 // Steal, InTurn, Discard, Reveal, Four, TheyWin -- see changeState(s)
 var Tiles = [];
 var Winner = []; // [name, pID]
@@ -185,7 +185,7 @@ topbut.onclick = function(){
           tiles: l
         });
       }
-      
+
     }
     else if(topbut.value == 'steal'){
       // call server
@@ -335,6 +335,24 @@ c.onclick = function(){
     });
     
   }
+}
+
+function win(){
+  // call "win"
+  console.log("WIN FUNCTION");
+  socket.emit('win', {
+    pID: socket.id,
+    name: Name,
+    room: Room
+  });
+  // change state for everyone else to display accept or reject
+  socket.emit('change others', {
+    names: Players.slice(1),
+    state: "TheyWin",
+    room: Room,
+  })
+  // change my own display to show nothing only
+  changeState("Nothing");
 }
 
 // ----------------------------------------------------------------------------
@@ -611,8 +629,8 @@ socket.on('display tiles', function(data){
 });
 
 /**
-  * @desc display player's revealed tiles 
-  * @param data = {Array: tiles, string: pname, string: message} - 
+  * @desc display player's revealed tiles
+  * @param data = {Array: tiles, string: pname, string: message} -
   * list of the player's revealed tiles (strings), name of player who revealed, message: state it was called in (reveal or win)
  */
 socket.on('display revealed', function(data){
@@ -655,11 +673,19 @@ socket.on('display revealed', function(data){
       }      
     }
   }
+<<<<<<< HEAD
   else{
     for(var i in data.tiles){
       element.innerHTML += 
       "<img class='"+clas+"' src='/client/img/"+data.tiles[i]+".svg'></img>";
     }   
+=======
+  for(var t in data.tiles){
+    for(var i in data.tiles[t]){
+      element.innerHTML +=
+      "<img class='"+clas+"' src='/client/img/"+data.tiles[t][i]+".svg'></img>";
+    }
+>>>>>>> a2b2f7f4fa503e057427389ba4d05ab6b4cdde13
   }
   
 });
@@ -865,7 +891,6 @@ function choose(id){
   * @param s = string{State}
  */
 function changeState(s){
-  //console.log("in changestate");
   console.log("state: " + s);
   State = s;
   var top = document.getElementById("first");
