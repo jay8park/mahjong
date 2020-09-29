@@ -53,7 +53,7 @@
                         <img id="b1" class='disc' src="/client/img/b1.svg"></img>
                         <span class="badge">3</span>
                     </div>
-                    
+
                     <img id="b2" class='disc' src="/client/img/b2.svg"></img>
                     <img id="b3" class='disc' src="/client/img/b3.svg"></img>
                     <img id="b4" class='disc' src="/client/img/b4.svg"></img>
@@ -80,14 +80,14 @@
                     <img id="s7" class='disc' src="/client/img/s7.svg"></img>
                     <img id="s8" class='disc' src="/client/img/s8.svg"></img>
                     <img id="s9" class='disc' src="/client/img/s9.svg"></img><br>
-                    <img id="a1" class='disc' src="/client/img/a1.svg"></img> <!-- east--> 
+                    <img id="a1" class='disc' src="/client/img/a1.svg"></img> <!-- east-->
                     <img id="a2" class='disc' src="/client/img/a2.svg"></img> <!-- south-->
                     <img id="a3" class='disc' src="/client/img/a3.svg"></img> <!-- west-->
                     <img id="a4" class='disc' src="/client/img/a4.svg"></img> <!-- north-->
                     <img id="a5" class='disc' src="/client/img/a5.svg"></img> <!-- money-->
                     <img id="a6" class='disc' src="/client/img/a6.svg"></img> <!-- blank-->
                     <img id="a7" class='disc' src="/client/img/a7.svg"></img> <!-- center-->
-                    
+
                 </div>
             </div>
             <!-- ---------- one's own reveal and buttons ----------------------------- -->
@@ -147,8 +147,8 @@
         <input class='btn btn-secondary' id="cancel" type="button" value="Cancel">
         <input class='btn btn-secondary' id="reveal" type="button" value="Reveal">
         <input class='btn btn-secondary' id="win" type="button" value="Win">
-        <input class='btn btn-secondary' id="reject" type="button" value="Reject">
-        <input class='btn btn-secondary' id="accept" type="button" value="Accept">
+        <input class='btn btn-secondary' id="reject2" type="button" value="Reject">
+        <input class='btn btn-secondary' id="accept2" type="button" value="Accept">
     </form>
 </div>
 
@@ -160,6 +160,103 @@
     <input class="btn btn-secondary" type="button" id="again" value="Play Again">
     <input class="btn btn-secondary" type="button" id="leave" onclick="window.location.href = '/'" value="Leave">
 
+</div>
+
+<!-- Button trigger modal-->
+<button type="button" class="btn btn-primary" data-toggle="modal" id="instructions" data-target="#modal1">RULES</button>
+
+<!--Modal: rules modal-->
+<div class="modal fade right" id="modal1" tabindex="-1" role="dialog"
+  aria-labelledby="myModalLabel" aria-hidden="true" data-backdrop="false">
+  <div class="modal-dialog modal-side modal-bottom-right modal-notify modal-info" role="document">
+    <!--Content-->
+    <div class="modal-content">
+      <!--Header-->
+      <div class="modal-header">
+        <p class="heading">RULES</p>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true" class="white-text">&times;</span>
+        </button>
+      </div>
+      <!--Body-->
+      <div class="modal-body">
+        <div class="row">
+          <p class="pt-3 pr-2">
+              This is a <b>four</b> player game, where each player has a hand of <b>tiles</b>.<br>
+              The goal of the game is to have four sets of 3 tiles and one set of 2 tiles.<br>
+              A 3 tiles set is defined as 3 of the same exact tile, or 3 consecutive tiles.
+              A set of 2 tiles is defined as 2 exact same tiles.<br>
+              Each player takes turns. On their turn a player will first gain a tile and then <i>discard</i> a tile to end their turn.
+              The gained tile will either come from the previous player's discard or the <i>draw</i> pile.
+              A player can only <i>steal</i> a tile from another player if it completes a set.
+              The player will then have to <i>reveal</i> the completed set.
+              A player can steal a tile out of turn if it completes a set of 3 identical tiles <b>OR</b>
+              if it is the final tile needed to win.
+              Otherwise, players can only steal in the order of their turn.
+          </p>
+          ADDITIONAL RULES:
+          <p class="pt-3 pr-2">
+              A player can also win by having seven sets of 2,
+              but this player can only obtain tiles by drawing from the pile.
+              A player may have the additional opportunity to draw a tile when they obtain 4 of the same tile.
+              When a player obtains it on their own, the exact tile is not revealed.
+              A player can obtain it from another player in the same way a player can obtain the tile if their have 2 of the same tile.
+              A set of four tiles acts as a set of 3.
+          </p>
+        </div>
+      </div>
+    </div>
+    <!--/.Content-->
+  </div>
+</div>
+
+<!--Modal: messages-->
+<div class="modal fade right" id="modal2" tabindex="-1" role="dialog"
+  aria-labelledby="myModalLabel" aria-hidden="true" data-backdrop="false">
+  <div class="modal-dialog modal-side modal-bottom-right modal-notify modal-info" role="document">
+    <!--Content-->
+    <div class="modal-content">
+      <!--Header-->
+      <div class="modal-header">
+        <p class="heading">WARNING</p>
+        <p class="heading" id="messageHeading"></p>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true" class="white-text">&times;</span>
+        </button>
+      </div>
+      <!--Body-->
+      <div class="modal-body">
+        <div class="row">
+          <p id="message" class="pt-3 pr-2">
+          </p>
+        </div>
+      </div>
+    </div>
+    <!--/.Content-->
+  </div>
+</div>
+
+
+<!--Modal: accept/reject modal-->
+<div class="modal fade right" id="modal3" tabindex="-1" role="dialog"
+  aria-labelledby="myModalLabel" aria-hidden="true" data-backdrop="false">
+  <div class="modal-dialog modal-side modal-bottom-right modal-notify modal-info" role="document">
+    <!--Content-->
+    <div class="modal-content">
+      <!--Header-->
+      <div class="modal-header">
+        <p class="heading"><span id="possibleWinner"></span> is claiming win</p>
+      </div>
+      <!--Body-->
+      <div class="modal-body">
+        <div class="row">
+          <input class='btn btn-secondary' id="reject" type="button" value="Reject">
+          <input class='btn btn-secondary' id="accept" type="button" value="Accept">
+        </div>
+      </div>
+    </div>
+    <!--/.Content-->
+  </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
