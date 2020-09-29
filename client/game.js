@@ -94,7 +94,6 @@ socket.on('start', function(data){
     if(data.message){
       // set the names for each player
       var index = data.players.findIndex(x => x.name === Name);
-      // console.log("index: " + index);
       var left = data.players[(index+1)%4].name;
       var top = data.players[(index+2)%4].name;
       var right = data.players[(index+3)%4].name;
@@ -166,11 +165,14 @@ topbut.onclick = function(){
         });
         changeState("Nothing");
       }
+      else{
+        modalMessage("choose a card to discard");
+      }
     }
     else if(topbut.value == 'reveal'){
-      // console.log("selected length: " + selected.length);
       if(selected.length < 3){
         console.log("not enough tiles");
+        modalMessage("not enough tiles");
       }
       else{
         var l = [];
@@ -212,7 +214,8 @@ topbut.onclick = function(){
     else if(topbut.value == 'accept'){
       // confirm win and change game state
       socket.emit('reset', {
-        room: Room
+        room: Room,
+        players: Players
       });
     }
   }
@@ -237,11 +240,11 @@ botbut.onclick = function(){
       changeState("Discard");
     }
     else if(botbut.value == 'win'){
-      // console.log("player " + Name + " claims win.");
       // tell server someone claimed to win
       socket.emit('claimed win', {
         pID: socket.id,
         room: Room,
+        players: Players.slice(1)
       });
       // change state for everyone else to display accept or reject
       socket.emit('change others', {
@@ -251,10 +254,10 @@ botbut.onclick = function(){
       });
       // change my own display to show nothing only
       changeState("Nothing");
+      modalMessage("Other players are judging...");
       Winner = [Name, socket.id];
     }
     else if(botbut.value == 'reject'){
-      // console.log(botbut.value);
       socket.emit('reject win', {
         pID: Winner[1],
         room: Room
@@ -334,7 +337,7 @@ c.onclick = function(){
       room: Room,
       tiles: l
     });
-    
+
   }
 }
 
@@ -452,6 +455,7 @@ reveal.onclick = function() {
   // set needs to be a size of 3 or greater
   if (tiles.length < 3) {
     console.log("not enough tiles to complete a set");
+    modalMessage("not enough tiles to complete a set");
     return;
   }
 
@@ -518,6 +522,22 @@ var reject = document.getElementById('reject');
  */
 reject.onclick = function() {
   console.log("rejecting win");
+  $('#modal3').modal('hide');
+
+  socket.emit('change others', {
+    names: Players,
+    state: "Reject/Accept",
+    room: Room,
+  });
+
+  // tell winner that they did not win
+  console.log(Winner[0]);
+  console.loge([Winner[0]]);
+  socket.emit('change others', {
+    names: [Winner[0]],
+    state: 'Reject',
+    room: Room
+  });
   Winner = [];
 }
 
@@ -532,10 +552,17 @@ var accept = document.getElementById('accept');
 accept.onclick = function() {
   console.log("accepting");
 
+  // hide modal3
+  $('#modal3').modal('hide');
   // confirm win and change game state
   socket.emit('reset', {
     room: Room
   });
+  socket.emit('change others', {
+    names: Players,
+    state: "Reject/Accept",
+    room: Room,
+  })
 }
 
 // ----------------------------------------------------------------------------
@@ -594,10 +621,8 @@ socket.on('newPlay', function(data){
   *   list of the player's tiles (strings) and function called to change the tiles (e.g. deal, discard, etc)
  */
 socket.on('display tiles', function(data){
-  //console.log("message: " + data.message);
   var theone = "none";
   var done = false;
-  // console.log("in display tiles message: " + data.message);
   if(data.message == "steal"){
     theone = data.tile;
   }
@@ -607,18 +632,13 @@ socket.on('display tiles', function(data){
     selected = [];
   }
   document.getElementById("hand").innerHTML = "";
-  // if(Active){
-  //   document.getElementById("astat").innerHTML = "<b>*</b>";
-  // }
   var id = 0;
   for(var t in data.tiles){
     document.getElementById("hand").innerHTML +=
     "<input type='image' class='hand' src='/client/img/" + data.tiles[t] +
     ".svg' onclick='choose("+id+")' id='"+id+"'>";
     if(theone != "none" && theone == data.tiles[t] && !done){
-      // console.log("selected id= " + id);
       document.getElementById(id).classList.add("choose");
-      // document.getElementById(id).disabled = true; not sure if this does anything
       selected.push(id);
       done = true;
     }
@@ -632,7 +652,6 @@ socket.on('display tiles', function(data){
   }
   // update player Tiles
   Tiles = data.tiles;
-  //console.log(data.tiles);
 });
 
 /**
@@ -671,22 +690,21 @@ socket.on('display revealed', function(data){
   }
   console.log("reveal tiles: " + data.tiles);
   if(data.message == "reject"){
-    // console.log("clear the rev for " + clas);
     element.innerHTML = "";
     for(var t in data.tiles){
       for(var i in data.tiles[t]){
-        element.innerHTML += 
+        element.innerHTML +=
         "<img class='"+clas+"' src='/client/img/"+data.tiles[t][i]+".svg'></img>";
-      }      
+      }
     }
   }
   else{
     for(var i in data.tiles){
-      element.innerHTML += 
+      element.innerHTML +=
       "<img class='"+clas+"' src='/client/img/"+data.tiles[i]+".svg'></img>";
-    }   
+    }
   }
-  
+
 });
 
 /**
@@ -694,7 +712,6 @@ socket.on('display revealed', function(data){
   * @param data = {String: tile} - the name of the tile last discarded
  */
 socket.on('update discard', function(data){
-  // console.log("last discarded: " + data.tile);
   clearBoard();
   document.getElementById(data.tile).classList.add('grab'); // highlight last discarded
   // update number
@@ -722,10 +739,9 @@ socket.on('change number', function(data){
 
 /**
   * @desc change my state
-  * @param data = {Array: names}, {string, state} - the name of the tile last discarded
+  * @param data = {Array: names}, {string: state} - list of player names and string describing the state
  */
 socket.on('change state', function(data){
-  // console.log("reject list: " + data.names);
   for(var i in data.names){
     if(data.names[i] == Name){
       changeState(data.state);
@@ -733,14 +749,24 @@ socket.on('change state', function(data){
   }
 });
 
+
+/**
+  * @desc display proper modal pop ups for players deciding on accepting or rejecting win
+  * @param data = {Array: names}, {string: winner} - list of player names
+ */
+socket.on('accept/reject modal', function(data){
+  for (var i in data.names) {
+    if (data.names[i] == Name) {
+      modalMessage(data.winner + " claims win. choose whether to accept or reject");
+    }
+  }
+})
+
 /**
   * @desc when a players turn changes, adjust *
   * @param data = {string: playerT, string: playerF, boolean: inturn} - the player whos turn it is, the player whos turn it was
  */
 socket.on('active', function(data){
-  // console.log("in the active client side function");
-  // console.log("t player: " + data.playerT + ",   f player: " + data.playerF);
-  // console.log("player[0]: " + Players[0]);
   var t = data.playerT;
   var f = data.playerF;
   var ID = "";
@@ -786,7 +812,6 @@ socket.on('active', function(data){
   }
 
   if(Active){
-    // console.log("I'm active");
     document.getElementById('astat').innerHTML = "<b>*</b>";
     if(data.inturn != null){ // case of the first turn
       if(data.inturn){
@@ -809,20 +834,9 @@ socket.on('active', function(data){
  */
 socket.on('message', function(data){
   console.log(data.message);
+  modalMessage(data.message);
 });
 
-/**
-  * @desc display winning details
-  * @param data = {string: name}, {Array: tiles}, {Array: revealed} - winning player's name, winning player's tiles in hand (string list), winning player's revealed tiles (list of string lists)
- */
-// socket.on('won', function(data){
-//   Winner = data.name;
-//   console.log(data.name + " has won");
-//   console.log("revealed tiles: ");
-//   console.log(data.revealed);
-//   console.log("tiles in hand: ");
-//   console.log(data.tiles);
-// });
 
 /**
   * @desc change display to finished display
@@ -833,6 +847,10 @@ socket.on('to finish', function(){
   document.getElementById('game').classList.add('d-none');
   document.getElementById('finished').classList.remove('d-none');
   document.getElementById('players').innerHTML = "";
+  document.getElementById('rev').innerHTML = "";
+  document.getElementById('erev').innerHTML = "";
+  document.getElementById('wrev').innerHTML = "";
+  document.getElementById('nrev').innerHTML = "";
 });
 
 
@@ -846,7 +864,6 @@ socket.on('to finish', function(){
  */
 function clearBoard(){
   var actives = document.getElementsByClassName("grab"); // get current highlighted
-  // console.log(actives.length);
   if(actives.length > 0){
     // should really only have one element at a time
     var element = actives[0];
@@ -879,11 +896,7 @@ function clearHand(){
  */
 
 function choose(id){
-  //console.log(id);
   var element = document.getElementById(id);
-  // if(element.classList.contains("drew")){
-  //   element.classList.remove("drew");
-  // }
   if(State == "Discard"){
     for(var s in selected){ // in theory should only have one
       var temp = selected.splice(s, 1);
@@ -1003,6 +1016,8 @@ function changeState(s){
       bottom.disabled = false;
       bottom.value = "reject";
       break;
+    case "Reject/Accept":
+      $('#modal2').modal('hide');
     default:
       top.disabled = true;
       bottom.disabled = true;
@@ -1010,4 +1025,14 @@ function changeState(s){
       clearHand();
       break;
   }
+}
+
+function modalMessage(message) {
+  document.getElementById('message').innerHTML = message;
+  $('#modal2').modal('show');
+}
+
+function rejectAcceptModal(winner) {
+  document.getElementById('possibleWinner').innerHTML = winner;
+  $('#modal3').modal('show');
 }

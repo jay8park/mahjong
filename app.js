@@ -6,7 +6,11 @@ var app = express();
 var serv = require('http').Server(app);
 var path = require('path');
 serv.listen(2000);
-var io = require('socket.io').listen(serv);
+var io = require('socket.io').listen(serv, {
+  pingTimeout: 60000
+});
+// following link helps resolve disconnection from being idle
+// https://github.com/socketio/socket.io/issues/3259
 
 // ----------------------------------------------------------------------------
 // URLS
@@ -604,7 +608,7 @@ io.sockets.on('connection', function(socket){
 
   /**
     * @desc display players cards on everyone's screen when they claim win
-    * @param data = {string: pID}, {string: room} - player ID and room name
+    * @param data = {string: pID}, {string: room}, {list: players} - player ID, room name, list of players (strings)
   */
   socket.on('claimed win', function(data){
     console.log(PLAYERS[data.pID].name + " won?");
@@ -614,37 +618,24 @@ io.sockets.on('connection', function(socket){
       message: "win",
       pID: data.pID,
     });
-    // var possibleWin = false;
-    // if (PLAYERS[data.pID].tiles.length + PLAYERS[data.pID].revealTileCount >= 14) {
-    //   possibleWin = true;
-    // }
 
-    // if (possibleWin) {
-    //   // send to entire room
-    //   io.to(data.room).emit('won', {
-    //     name: data.name,
-    //     tiles: PLAYERS[data.pID].tiles,
-    //     revealed: PLAYERS[data.pID].revealed
-    //   });
-    // }
-    // else {
-    //   // send to player
-    //   io.to(data.pID).emit('message', {
-    //     message: "not enough tiles to win"
-    //   });   // return the list of tiles to the player's screen
-    // }
+    io.to(data.room).emit('accept/reject modal', {
+      names: data.players,
+      winner: PLAYERS[data.pID].name
+    });
+
   });
 
   /**
     * @desc win was rejected, reset state
-    * @param data = {string: room, string: pID} - room name and winner's ID
+    * @param data = {string: room}, {string: pID} - room name and winner's ID
   */
  socket.on('reject win', function(data){
   console.log("reject " + PLAYERS[data.pID].name);
   var winnerName = PLAYERS[data.pID].name;
   // change revealed tiles
   io.to(data.room).emit('display revealed', {
-    message: "reject", 
+    message: "reject",
     pname: winnerName,
     tiles: PLAYERS[data.pID].revealed,
   });
@@ -653,7 +644,7 @@ io.sockets.on('connection', function(socket){
     names: [winnerName],
     state: "Discard",
   });
-  // change state of everyone else
+  // change state of everyone else (everyone but the winner)
   var roomPlayers = ROOMS[data.room].players;
   var playersCopy = [];
   for(var i in roomPlayers){
@@ -665,14 +656,31 @@ io.sockets.on('connection', function(socket){
     names: playersCopy,
     state: "Nothing",
   });
+
+  // remove modal popup for everyone else
+  io.to(data.room).emit('change state', {
+    names: playersCopy,
+    state: "Reject/Accept",
+  });
+
+  // winner's modal message
+  io.to(data.pID).emit('message', {
+    message: "someone rejected your win"
+  });
  });
 
   /**
     * @desc reset game state
-    * @param data = {string: room} - room name
+    * @param data = {string: room}, {Array: players} - room name and list of players' names
   */
   socket.on('reset', function(data){
     console.log("resetting room: " + data.room);
+
+    // remove modal popup for everyone
+    io.to(data.room).emit('change state', {
+      names: data.players,
+      state: "Reject/Accept",
+    });
 
     for (var i = 0; i < ROOMS[data.room].players.length; i++) {
       delete PLAYERS[ROOMS[data.room].players[i].id];
@@ -686,6 +694,7 @@ io.sockets.on('connection', function(socket){
     ROOMS[data.room].steal = false;
     ROOMS[data.room].inplay = false;
     ROOMS[data.room].prevActive = "";
+
 
     io.to(data.room).emit('to finish');
   });
