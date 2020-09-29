@@ -673,19 +673,11 @@ socket.on('display revealed', function(data){
       }      
     }
   }
-<<<<<<< HEAD
   else{
     for(var i in data.tiles){
       element.innerHTML += 
       "<img class='"+clas+"' src='/client/img/"+data.tiles[i]+".svg'></img>";
     }   
-=======
-  for(var t in data.tiles){
-    for(var i in data.tiles[t]){
-      element.innerHTML +=
-      "<img class='"+clas+"' src='/client/img/"+data.tiles[t][i]+".svg'></img>";
-    }
->>>>>>> a2b2f7f4fa503e057427389ba4d05ab6b4cdde13
   }
   
 });
