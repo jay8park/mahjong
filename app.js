@@ -387,10 +387,17 @@ io.sockets.on('connection', function(socket){
     PLAYERS[data.pID].tiles.sort();
 
     console.log(data.name + ' is drawing ' + draw);
+    var ind = 0;
+    for(var i in PLAYERS[data.pID].tiles){
+      if(draw == PLAYERS[data.pID].tiles[i]){
+        ind = i;
+      }
+    }
 
     io.to(data.pID).emit('display tiles', {
       tiles: PLAYERS[data.pID].tiles,
-      message: "draw"
+      message: "draw", 
+      index: ind
     });   // return the list of tiles to the player's screen
   });
 
@@ -407,11 +414,12 @@ io.sockets.on('connection', function(socket){
         removed = PLAYERS[data.pID].tiles.splice(i, 1);   // remove tile from player's hand
         ROOMS[data.room].discard[data.tile] += 1;     // add discarded tile into room's discard pile/list
         ROOMS[data.room].last = data.tile;      // set last discard tile
+        ROOMS[data.room].discPlayer = data.name; // set player
         break;
       }
     }
     ROOMS[data.room].steal = true; // players can now steal tiles from discard
-
+    
     // console.log("discard pile: ")
     // console.log(ROOMS[data.room].discard);
 
@@ -443,6 +451,10 @@ io.sockets.on('connection', function(socket){
       message: "steal",
       tile: tile
     });   // return the list of tiles to the player's screen
+    io.to(data.room).emit('change number', {
+      tile: tile, 
+      oper: "-"
+    })
   });
 
   /**
@@ -578,6 +590,20 @@ io.sockets.on('connection', function(socket){
     io.to(data.room).emit('update discard', {
       tile: ROOMS[data.room].last,
     });   // return the list of tiles to the player's screen
+
+    // list of players minus last discarded player - change state to Steal
+    var roomPlayers = ROOMS[data.room].players;
+    var playersCopy = [];
+    for(var i in roomPlayers){
+      if(ROOMS[data.room].discPlayer != roomPlayers[i].name){
+        playersCopy.push(roomPlayers[i].name);
+      }
+    }
+    io.to(data.room).emit('change state', {
+      names: playersCopy,
+      state: "Steal",
+    });
+
   });
 
   /**
@@ -694,6 +720,7 @@ function createRoom(r){
   Room.discard = Object.assign({}, availableTiles);
   Room.last = "";   // last dicarded tile
   Room.prevLast = "";   // previously last discarded tile
+  Room.discPlayer = ""; // person who discarded the discarded tile
   Room.steal = false;
   Room.inplay = false;
   Room.prevActive = "";   // should be player id rather than player name

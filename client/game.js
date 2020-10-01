@@ -214,8 +214,9 @@ topbut.onclick = function(){
         state: "Nothing",
         room: Room,
       });
-      clearBoard(); // remove discarded highlight
       changeState("Reveal");
+      clearBoard(); // remove discarded highlight
+      
     }
     else if(topbut.value == 'accept'){
       // confirm win and change game state
@@ -314,11 +315,11 @@ c.onclick = function(){
 
     // change the state for other players
     // also changes everyone's display to be "steal"
-    socket.emit('change others', {
-      names: Players,
-      state: "Steal",
-      room: Room,
-    })
+    // socket.emit('change others', {
+    //   names: Players,
+    //   state: "Steal",
+    //   room: Room,
+    // });
 
     // request the server side to change the status of the previous actvive player as active
     // if player stole within turn, it will display proper buttons instead of "steal" state buttons
@@ -648,7 +649,13 @@ socket.on('display tiles', function(data){
       selected.push(id);
       done = true;
     }
+    
     id += 1;
+  }
+  if(data.message == "draw"){
+    var i = data.index;
+    console.log("index = "  + data.index);
+    document.getElementById(i).classList.add("drew");
   }
   // update player Tiles
   Tiles = data.tiles;
@@ -714,6 +721,27 @@ socket.on('display revealed', function(data){
 socket.on('update discard', function(data){
   clearBoard();
   document.getElementById(data.tile).classList.add('grab'); // highlight last discarded
+  // update number
+  var name = "n" + data.tile;
+  var num = document.getElementById(name).innerHTML;
+  document.getElementById(name).innerHTML = parseInt(num)+1;
+  document.getElementById(name).style.backgroundColor = "red";
+  document.getElementById(name).style.color = "white";
+});
+
+/**
+  * @desc update the discard pile numbers
+  * @param data = {String: tile, String: oper} - the name of the tile, operation + or -
+ */
+socket.on('change number', function(data){
+  var name = "n" + data.tile;
+  var num = document.getElementById(name).innerHTML;
+  if(data.oper == "+"){
+    document.getElementById(name).innerHTML = parseInt(num) + 1;
+  }
+  else{
+    document.getElementById(name).innerHTML = parseInt(num) - 1;
+  }
 });
 
 /**
@@ -845,7 +873,26 @@ function clearBoard(){
   var actives = document.getElementsByClassName("grab"); // get current highlighted
   if(actives.length > 0){
     // should really only have one element at a time
-    actives[0].classList.remove('grab');
+    var element = actives[0];
+    element.classList.remove('grab');
+    // change background color and text color of number
+    var name = "n" + element.getAttribute('id');
+    var span = document.getElementById(name);
+    span.style.backgroundColor = "pink";
+    span.style.color = "black";
+  }
+}
+
+/**
+  * @desc clear highlights in hand
+ */
+function clearHand(){
+  var actives = document.getElementsByClassName("drew"); // get current highlighted
+  // console.log(actives.length);
+  if(actives.length > 0){
+    // should really only have one element at a time
+    var element = actives[0];
+    element.classList.remove('drew');
   }
 }
 
@@ -856,18 +903,19 @@ function clearBoard(){
  */
 
 function choose(id){
+  var element = document.getElementById(id);
   if(State == "Discard"){
     for(var s in selected){ // in theory should only have one
       var temp = selected.splice(s, 1);
       document.getElementById(temp+"").classList.remove("choose");
       selected.shift(); // remove from front
     }
-    document.getElementById(id).classList.add("choose");
+    element.classList.add("choose");
     selected.push(id);
   }
   else if(State == "Reveal"){
-    if(document.getElementById(id).classList.contains("choose") && id != selected[0]){
-      document.getElementById(id).classList.remove("choose");
+    if(element.classList.contains("choose") && id != selected[0]){
+      element.classList.remove("choose");
       selected.splice(selected.indexOf(id), 1);
     }
     else if(id != selected[0]){
@@ -875,7 +923,7 @@ function choose(id){
         var temp = selected.splice(1,1); // remove the second one bc the first should be permanent
         document.getElementById(temp).classList.remove("choose");
       }
-      document.getElementById(id).classList.add("choose");
+      element.classList.add("choose");
       selected.push(id);
       if(selected.length == 3){
         document.getElementById("first").disabled = false;
@@ -883,8 +931,8 @@ function choose(id){
     }
   }
   else if(State == "ChooseFour"){
-    if(document.getElementById(id).classList.contains("choose")){
-      document.getElementById(id).classList.remove("choose");
+    if(element.classList.contains("choose")){
+      element.classList.remove("choose");
       selected.splice(selected.indexOf(id), 1);
     }
     else{
@@ -892,7 +940,7 @@ function choose(id){
         var temp = selected.splice(0,1); // remove the first one
         document.getElementById(temp).classList.remove("choose");
       }
-      document.getElementById(id).classList.add("choose");
+      element.classList.add("choose");
       selected.push(id);
       if(selected.length == 4){
         document.getElementById("canc").disabled = false;
@@ -981,6 +1029,7 @@ function changeState(s){
       top.disabled = true;
       bottom.disabled = true;
       clearBoard();
+      clearHand();
       break;
   }
 }
