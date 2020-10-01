@@ -244,12 +244,23 @@
     border-style: solid;
     border-radius: 5px;
 }
-/* #c8{
-    border-style: solid;
-    opacity: 100%;
-    border-width: 1px;
-    border-color: red;
-} */
-/* .d-none{
-    position: absolute;
-} */
+/* -----------------play again page-------------------------*/
+#finished{
+    text-align: center;
+}
+#room2, #winner{
+    color: green;
+    font-weight: bold;
+}
+.patiles{
+    width: 5%;
+    background-image: url(img/background.png);
+    background-size: 100%;
+}
+.parow{
+    display: inline-block;
+    text-align: center;
+}
+.fin{
+    display: inline-block;
+}

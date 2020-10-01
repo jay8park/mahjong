@@ -675,11 +675,29 @@ io.sockets.on('connection', function(socket){
   */
   socket.on('reset', function(data){
     console.log("resetting room: " + data.room);
-
+    
     // remove modal popup for everyone
     io.to(data.room).emit('change state', {
       names: data.players,
       state: "Reject/Accept",
+    });
+
+    // place winner at beginning of array
+    var ps = data.players;
+    ps.splice(ps.indexOf(data.winner), 1);
+    ps.unshift(data.winner);
+    // make list of list of tiles for each player
+    var roomplayers = ROOMS[data.room].players;
+    var tiles = [[],[],[],[]];
+    for(var i in roomplayers){
+      var index = ps.indexOf(roomplayers[i].name);
+      tiles[index] = roomplayers[i].tiles.concat(roomplayers[i].revealed);
+    }
+
+    // send tiles to play again screen
+    io.to(data.room).emit('update playagain', {
+      players: ps,
+      tiles: tiles
     });
 
     for (var i = 0; i < ROOMS[data.room].players.length; i++) {

@@ -215,7 +215,8 @@ topbut.onclick = function(){
       // confirm win and change game state
       socket.emit('reset', {
         room: Room,
-        players: Players
+        players: Players, 
+        winner: Winner[0]
       });
     }
   }
@@ -760,7 +761,23 @@ socket.on('accept/reject modal', function(data){
       modalMessage(data.winner + " claims win. choose whether to accept or reject");
     }
   }
-})
+});
+
+/**
+  * @desc display each players hand in play again section
+  * @param data = {Array: players}, {Array: tiles} - list of player names, list of corresponding player tiles
+ */
+socket.on('update playagain', function(data){
+  var names = ["aname", "bname", "cname", "dname"];
+  var hands = ["pa", "pb", "pc", "pd"];
+  for(var i in data.players){
+    document.getElementById(names[i]).innerText = data.players[i]; // set the name
+    for(var t in data.tiles[i]){
+      document.getElementById(hands[i]).innerHTML += 
+      "<img class='patiles' src='/client/img/"+data.tiles[i][t]+".svg'></img>";
+    }
+  }
+});
 
 /**
   * @desc when a players turn changes, adjust *
@@ -842,8 +859,8 @@ socket.on('message', function(data){
   * @desc change display to finished display
  */
 socket.on('to finish', function(){
-  document.getElementById('room2').innerText += " " + Room;
-  document.getElementById('winner').innerText += " " + Winner[0];
+  document.getElementById('room2').innerText += Room;
+  document.getElementById('winner').innerText += Winner[0];
   document.getElementById('game').classList.add('d-none');
   document.getElementById('finished').classList.remove('d-none');
   document.getElementById('players').innerHTML = "";
