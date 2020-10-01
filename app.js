@@ -366,8 +366,8 @@ io.sockets.on('connection', function(socket){
       // console.log(p);
       // console.log(deal(ROOMS[data.room].tiles));
 
-      // console.log(ROOMS[data.room].players[p].name + " has tiles: ");
-      // console.log(ROOMS[data.room].players[p].tiles);
+       console.log(ROOMS[data.room].players[p].name + " has tiles: ");
+       console.log(ROOMS[data.room].players[p].tiles);
 
       io.to(ROOMS[data.room].players[p].id).emit('display tiles', {
         tiles: ROOMS[data.room].players[p].tiles,
@@ -623,7 +623,7 @@ io.sockets.on('connection', function(socket){
       names: data.players,
       winner: PLAYERS[data.pID].name
     });
-
+    console.log("tile: " + tiles);
   });
 
   /**
@@ -687,23 +687,22 @@ io.sockets.on('connection', function(socket){
     ps.splice(ps.indexOf(data.winner), 1);
     ps.unshift(data.winner);
     // make list of list of tiles for each player
-    var roomplayers = ROOMS[data.room].players;
-    var tiles = [[],[],[],[]];
+    var roomplayers = [...ROOMS[data.room].players];
+    var hands = [[],[],[],[]];
     for(var i in roomplayers){
       var index = ps.indexOf(roomplayers[i].name);
-      tiles[index] = roomplayers[i].tiles.concat(roomplayers[i].revealed);
+      hands[index] = [...roomplayers[i].tiles.concat(roomplayers[i].revealed)];
     }
 
     // send tiles to play again screen
     io.to(data.room).emit('update playagain', {
       players: ps,
-      tiles: tiles
+      tiles: hands
     });
 
     for (var i = 0; i < ROOMS[data.room].players.length; i++) {
       delete PLAYERS[ROOMS[data.room].players[i].id];
     }
-
     ROOMS[data.room].players = [];
     ROOMS[data.room].tiles = shuffle([...tiles]);
     ROOMS[data.room].discard = Object.assign({}, availableTiles);

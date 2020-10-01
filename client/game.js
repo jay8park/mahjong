@@ -7,7 +7,7 @@ var Name = "";
 var Active = false; // is it the current players turn or not
 var Players = []; // list of names of other players in the same room; order is [me, left, top, right]
 var State = "Nothing" // state of current player to determine which buttons are active;
-// Steal, InTurn, Discard, Reveal, Four, TheyWin -- see changeState(s)
+// Steal, InTurn, Discard, Reveal, Four, TheyWin, Accept/Reject -- see changeState(s)
 var Tiles = [];
 var Winner = []; // [name, pID]
 var selected = []; // list of selected tiles in your hand by id
@@ -56,7 +56,8 @@ start.onclick = function(){
       * @desc things we want to happen once when game starts, only gets called with the one who clicked start
       * @param data = {boolean: message} - a boolean that tells us whether the server is ready to start the game
      */
-    socket.on('start', function(data){
+    socket.once('start', function(data){
+      console.log("start is being called");
         if(data.message){
             // deal the cards to everyone (13 tiles for everybody)
             socket.emit('deal', {
@@ -576,6 +577,21 @@ var again = document.getElementById('again');
  */
 again.onclick = function() {
   console.log("play again");
+  // reset client side vars
+  Active = false;
+  State = "Nothing";
+  Players = [];
+  Winner = [];
+  selected = [];
+  document.getElementById("leftname").innerHTML = "";
+  document.getElementById("topname").innerHTML = "";
+  document.getElementById("rightname").innerHTML = "";
+  document.getElementById("room2").innerHTML = "";
+  document.getElementById("winner").innerHTML = "";
+  document.getElementById("pa").innerHTML = "<h4 id='aname' class='fin'></h4>";
+  document.getElementById("pb").innerHTML = "<h4 id='bname' class='fin'></h4>";
+  document.getElementById("pc").innerHTML = "<h4 id='cname' class='fin'></h4>";
+  document.getElementById("pd").innerHTML = "<h4 id='dname' class='fin'></h4>";
 
   socket.emit('joinRoom',{
     room: Room,
@@ -771,7 +787,7 @@ socket.on('update playagain', function(data){
   var names = ["aname", "bname", "cname", "dname"];
   var hands = ["pa", "pb", "pc", "pd"];
   for(var i in data.players){
-    document.getElementById(names[i]).innerText = data.players[i]; // set the name
+    document.getElementById(names[i]).innerText = data.players[i] + ": "; // set the name
     for(var t in data.tiles[i]){
       document.getElementById(hands[i]).innerHTML += 
       "<img class='patiles' src='/client/img/"+data.tiles[i][t]+".svg'></img>";
@@ -825,7 +841,7 @@ socket.on('active', function(data){
     ID = "none";
   }
   if(ID != "none"){
-    document.getElementById(ID).innerHTML += "*";
+    document.getElementById(ID).innerHTML = t + "*";
   }
 
   if(Active){
@@ -859,8 +875,8 @@ socket.on('message', function(data){
   * @desc change display to finished display
  */
 socket.on('to finish', function(){
-  document.getElementById('room2').innerText += Room;
-  document.getElementById('winner').innerText += Winner[0];
+  document.getElementById('room2').innerText = Room;
+  document.getElementById('winner').innerText = Winner[0];
   document.getElementById('game').classList.add('d-none');
   document.getElementById('finished').classList.remove('d-none');
   document.getElementById('players').innerHTML = "";
