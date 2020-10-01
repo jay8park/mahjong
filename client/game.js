@@ -12,6 +12,13 @@ var Tiles = [];
 var Winner = []; // [name, pID]
 var selected = []; // list of selected tiles in your hand by id
 
+
+// set cookies
+document.cookie = "socket=" + socket.id;
+console.log("cookie");
+console.log(document.cookie);
+
+
 //getting URL query data
 var search = window.location.search.substring(1);
 var params = search.split("&");
