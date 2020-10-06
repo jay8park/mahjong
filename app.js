@@ -5,8 +5,10 @@ var express = require('express');
 var app = express();
 var serv = require('http').Server(app);
 var path = require('path');
-const port = process.env.PORT || 300
-serv.listen(port);
+const port = process.env.PORT || 2000
+serv.listen(port, () => {
+  console.log('Server running at port ' + port);
+});
 var io = require('socket.io').listen(serv, {
   pingTimeout: 60000
 });
