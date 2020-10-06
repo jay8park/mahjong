@@ -13,12 +13,6 @@ var Winner = []; // [name, pID]
 var selected = []; // list of selected tiles in your hand by id
 
 
-// set cookies
-document.cookie = "socket=" + socket.id;
-console.log("cookie");
-console.log(document.cookie);
-
-
 //getting URL query data
 var search = window.location.search.substring(1);
 var params = search.split("&");
@@ -33,14 +27,33 @@ for(var item in params){
 }
 
 document.getElementById('room').innerText += " " + Room;    // display Room name
-console.log("this is my ID: " + socket.id);
 
-// notify the server we arrived at this page
-socket.emit('newJoin', {
-  room: Room,
-  name: Name
-});
 
+// in the case where a player refreshes the page
+if (sessionStorage.getItem("name")) {
+  socket.emit('rejoin', {
+    room: Room,
+    name: sessionStorage.get("name"),
+    tiles: sessionStorage.get("tiles"),
+    revealed: sessionStorage.get("revealed"),
+    active: sessionStorage.get("active"),
+    outOfTurn: sessionStorage.get("outOfTurn"),
+    revealTileCount: sessionStorage.get("revealTileCount"),
+    index: sessionStorage.get("index")    // player's index in the player's list (on server side)
+  });
+
+  // display in-play view
+  document.getElementById('waiting').classList.add('d-none');
+  document.getElementById('game').classList.remove('d-none');
+}
+// in the case where its a new player
+else {
+  // notify the server we arrived at this page
+  socket.emit('newJoin', {
+    room: Room,
+    name: Name
+  });
+}
 
 // ----------------------------------------------------------------------------
 // START BUTTON
@@ -121,6 +134,14 @@ socket.on('start', function(data){
     else{
         console.log("error: cant start without 4.");
     }
+
+    // set cookies
+    document.cookie = "socket=" + socket.id;
+    console.log("cookie");
+    console.log(document.cookie);
+
+    sessionStorage.setItem("name", Name);
+
 });
 
 
@@ -216,7 +237,7 @@ topbut.onclick = function(){
       });
       changeState("Reveal");
       clearBoard(); // remove discarded highlight
-      
+
     }
     else if(topbut.value == 'accept'){
       // confirm win and change game state
@@ -609,9 +630,9 @@ again.onclick = function() {
   * @param data = {String: error} - error message
  */
 socket.on('newPlay', function(data){
-  if(data.error){
-    window.location.href = "/";
-  }
+  // if(data.error){
+  //   window.location.href = "/";
+  // }
   console.log("received emission");
 
   var html = "";
@@ -649,7 +670,7 @@ socket.on('display tiles', function(data){
       selected.push(id);
       done = true;
     }
-    
+
     id += 1;
   }
   if(data.message == "draw"){

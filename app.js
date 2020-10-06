@@ -160,6 +160,19 @@ io.sockets.on('connection', function(socket){
   });
 
   /**
+    * @desc creates a re-joining Player object
+    * @param data = {string: room}, {string: name}, {Array: tiles}, {Array: revealed}, {boolean: active}, {boolean: outOfTurn}, {boolean: revealTileCount}, {int: index} - room name and player name
+  */
+  socket.on('rejoin', function(data){
+    console.log("this is the socket id: " + socket.id);
+    if(!ROOMS[data.room]){
+      createRoom(data.room);
+    }
+    var player = setPlayer(socket.id, data.name, data.tiles, data.revealed, data.active, data.outOfTurn, data.revealTileCount);
+    ROOMS[data.room].players.splice(data.index, 0, player);
+  });
+
+  /**
     * @desc checks requirements to start game, and starts game
     * @param data = {string: room} - room name
   */
@@ -396,7 +409,7 @@ io.sockets.on('connection', function(socket){
 
     io.to(data.pID).emit('display tiles', {
       tiles: PLAYERS[data.pID].tiles,
-      message: "draw", 
+      message: "draw",
       index: ind
     });   // return the list of tiles to the player's screen
   });
@@ -419,7 +432,7 @@ io.sockets.on('connection', function(socket){
       }
     }
     ROOMS[data.room].steal = true; // players can now steal tiles from discard
-    
+
     // console.log("discard pile: ")
     // console.log(ROOMS[data.room].discard);
 
@@ -452,7 +465,7 @@ io.sockets.on('connection', function(socket){
       tile: tile
     });   // return the list of tiles to the player's screen
     io.to(data.room).emit('change number', {
-      tile: tile, 
+      tile: tile,
       oper: "-"
     })
   });
@@ -539,18 +552,18 @@ io.sockets.on('connection', function(socket){
 
       io.to(data.pID).emit('display tiles', {
         tiles: PLAYERS[data.pID].tiles,
-        message: "reveal" 
+        message: "reveal"
       });   // return the list of tiles to the player's screen
 
       io.to(data.room).emit('display revealed', {
-        message: "four", 
+        message: "four",
         tiles: ["a6, a6, a6, a6"], //four blanks
         pname: data.name
       });   // return the list of sets of tiles to the player's screen
     }
     else{
       io.to(data.pID).emit('message', {
-        message: "did not reveal identical 4" 
+        message: "did not reveal identical 4"
       });   // error message to client
     }
    }
@@ -743,6 +756,19 @@ function createPlayer(p, s){
   Player.active = false;
   Player.outOfTurn = false;
   Player.revealTileCount = 0;
+  PLAYERS[Player.id] = Player;
+  return Player;
+}
+
+function setPlayer(socket, name, tiles, revealed, active, outOfTurn, revealTileCount){
+  var Player = {};
+  Player.id = socket;
+  Player.name = name;
+  Player.tiles = tiles;
+  Player.revealed = revealed; // list of list
+  Player.active = active;
+  Player.outOfTurn = outOfTurn;
+  Player.revealTileCount = revealTileCount;
   PLAYERS[Player.id] = Player;
   return Player;
 }
