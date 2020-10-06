@@ -5,7 +5,8 @@ var express = require('express');
 var app = express();
 var serv = require('http').Server(app);
 var path = require('path');
-serv.listen(2000);
+const port = process.env.PORT || 300
+serv.listen(port);
 var io = require('socket.io').listen(serv, {
   pingTimeout: 60000
 });
@@ -396,7 +397,7 @@ io.sockets.on('connection', function(socket){
 
     io.to(data.pID).emit('display tiles', {
       tiles: PLAYERS[data.pID].tiles,
-      message: "draw", 
+      message: "draw",
       index: ind
     });   // return the list of tiles to the player's screen
   });
@@ -419,7 +420,7 @@ io.sockets.on('connection', function(socket){
       }
     }
     ROOMS[data.room].steal = true; // players can now steal tiles from discard
-    
+
     // console.log("discard pile: ")
     // console.log(ROOMS[data.room].discard);
 
@@ -452,7 +453,7 @@ io.sockets.on('connection', function(socket){
       tile: tile
     });   // return the list of tiles to the player's screen
     io.to(data.room).emit('change number', {
-      tile: tile, 
+      tile: tile,
       oper: "-"
     })
   });
@@ -539,18 +540,18 @@ io.sockets.on('connection', function(socket){
 
       io.to(data.pID).emit('display tiles', {
         tiles: PLAYERS[data.pID].tiles,
-        message: "reveal" 
+        message: "reveal"
       });   // return the list of tiles to the player's screen
 
       io.to(data.room).emit('display revealed', {
-        message: "four", 
+        message: "four",
         tiles: ["a6, a6, a6, a6"], //four blanks
         pname: data.name
       });   // return the list of sets of tiles to the player's screen
     }
     else{
       io.to(data.pID).emit('message', {
-        message: "did not reveal identical 4" 
+        message: "did not reveal identical 4"
       });   // error message to client
     }
    }
@@ -675,7 +676,7 @@ io.sockets.on('connection', function(socket){
   */
   socket.on('reset', function(data){
     console.log("resetting room: " + data.room);
-    
+
     // remove modal popup for everyone
     io.to(data.room).emit('change state', {
       names: data.players,
