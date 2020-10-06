@@ -248,9 +248,24 @@
 </div>
 
 <div id="finished" class='d-none'>
-    <h3 id="room2">Room Code: </h3>
-    <h3 id="winner">Winner:  </h3>
+    <h3>Room Code: <span id="room2"></span></h3>
+    <h3>Winner: <span id="winner"></span></h3>
     <br>
+    <div class="row parow" id="pa">
+        <h4 id="aname" class="fin"></h4>
+    </div>
+    <br><br>
+    <div class="row parow" id="pb"> 
+        <h4 id="bname" class="fin"></h4>
+    </div>
+    <br><br>
+    <div class="row parow" id="pc">
+        <h4 id="cname" class="fin"></h4>
+    </div>
+    <br><br>
+    <div class="row parow" id="pd">
+        <h4 id="dname" class="fin"></h4>
+    </div>
     <p class="error" id="err"></p>
     <input class="btn btn-secondary" type="button" id="again" value="Play Again">
     <input class="btn btn-secondary" type="button" id="leave" onclick="window.location.href = '/'" value="Leave">
