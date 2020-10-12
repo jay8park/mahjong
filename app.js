@@ -547,7 +547,7 @@ io.sockets.on('connection', function(socket){
 
       io.to(data.room).emit('display revealed', {
         message: "four",
-        tiles: ["a6, a6, a6, a6"], //four blanks
+        tiles: ["a6", "a6", "a6", "a6"], //four blanks
         pname: PLAYERS[data.pID].name
       });   // return the list of sets of tiles to the player's screen
     }
