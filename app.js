@@ -694,7 +694,10 @@ io.sockets.on('connection', function(socket){
     var hands = [[],[],[],[]];
     for(var i in roomplayers){
       var index = ps.indexOf(roomplayers[i].name);
-      hands[index] = [...roomplayers[i].tiles.concat(roomplayers[i].revealed)];
+      hands[index] = [...roomplayers[i].tiles]
+      for(var t in roomplayers[i].revealed){
+        hands[index] = hands[index].concat(roomplayers[i].revealed[t]);
+      }
     }
 
     // send tiles to play again screen
