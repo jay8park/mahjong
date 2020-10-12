@@ -98,8 +98,12 @@ function displayError(name, room) {
     error = true;
   }
   if (room == "" || room == null) {
-    console.log("hello");
+    //console.log("hello");
     document.getElementById("room-err").innerHTML = "Please enter a room code.";
+    error = true;
+  }
+  if (name.includes(" ")) {
+    document.getElementById("name-err").innerHTML = "Player name should not include spaces.";
     error = true;
   }
   if (error) {
