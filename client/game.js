@@ -217,13 +217,13 @@ topbut.onclick = function(){
       });
       changeState("Reveal");
       clearBoard(); // remove discarded highlight
-      
+
     }
     else if(topbut.value == 'accept'){
       // confirm win and change game state
       socket.emit('reset', {
         room: Room,
-        players: Players, 
+        players: Players,
         winner: Winner[0]
       });
     }
@@ -658,7 +658,7 @@ socket.on('display tiles', function(data){
       selected.push(id);
       done = true;
     }
-    
+
     id += 1;
   }
   if(data.message == "draw"){
@@ -788,7 +788,7 @@ socket.on('update playagain', function(data){
   for(var i in data.players){
     document.getElementById(names[i]).innerText = data.players[i] + ": "; // set the name
     for(var t in data.tiles[i]){
-      document.getElementById(hands[i]).innerHTML += 
+      document.getElementById(hands[i]).innerHTML +=
       "<img class='patiles' src='/client/img/"+data.tiles[i][t]+".svg'></img>";
     }
   }

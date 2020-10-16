@@ -345,7 +345,7 @@ io.sockets.on('connection', function(socket){
 
   /**
       * @desc change players states on client side
-      * @param data = {Array: names}, {string: state}, {string: room} - list of players in room to change to which state
+      * @param data = {Array: names}, {string: state}, {string: room} -
     */
   socket.on('change others', function(data){
     console.log("CHANGE OTHERS")
@@ -444,6 +444,7 @@ io.sockets.on('connection', function(socket){
     var tile = ROOMS[data.room].last;
     PLAYERS[data.pID].tiles.push(ROOMS[data.room].last);
     PLAYERS[data.pID].tiles.sort();
+    PLAYERS[data.pID].steal = true;
     ROOMS[data.room].discard[ROOMS[data.room].last] -= 1;
     ROOMS[data.room].steal = false; // players cannot steal tiles from discard now
     ROOMS[data.room].prevLast = ROOMS[data.room].last;
@@ -500,6 +501,7 @@ io.sockets.on('connection', function(socket){
       }
       PLAYERS[data.pID].revealed.push(data.tiles);    // add completed set list to revealed list
       PLAYERS[data.pID].revealTileCount += data.tiles.length;
+      PLAYERS[data.pID].steal = false;
 
       io.to(data.pID).emit('display tiles', {
         tiles: PLAYERS[data.pID].tiles,
@@ -643,10 +645,19 @@ io.sockets.on('connection', function(socket){
     tiles: PLAYERS[data.pID].revealed,
   });
   // change state of the winner
-  io.to(data.room).emit('change state', {
-    names: [winnerName],
-    state: "Discard",
-  });
+  if (PLAYERS[data.pID].steal) {
+    // change back to cancel if previous move was steal
+    io.to(data.room).emit('change state', {
+      names: [winnerName],
+      state: "Reveal",
+    });
+  }
+  else {
+    io.to(data.room).emit('change state', {
+      names: [winnerName],
+      state: "Discard",
+    });
+  }
   // change state of everyone else (everyone but the winner)
   var roomPlayers = ROOMS[data.room].players;
   var playersCopy = [];
@@ -766,6 +777,7 @@ function createPlayer(p, s){
   Player.active = false;
   Player.outOfTurn = false;
   Player.revealTileCount = 0;
+  Player.steal = false;
   PLAYERS[Player.id] = Player;
   return Player;
 }
