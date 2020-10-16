@@ -17,6 +17,7 @@ Player:
 - active -- boolean -- is it the player's turn? 
 - outOfTurn -- boolean -- used for the steal functionality, i.e. you can complete a consecutive set via a steal ONLY if the player stole within his/her turn
 - revealTileCount -- int -- total number of tiles
+- steal -- boolean -- in the case where someone steals and then clicks win, we use this flag to revert to the correct state (back to the cancel state and not the discard state); steal is set to true on steal, and set to false on completed reveal
 
 Room:
 - id -- string -- room code
