@@ -39,6 +39,7 @@ if (sessionStorage.getItem("name")) {
     active: sessionStorage.get("active"),
     outOfTurn: sessionStorage.get("outOfTurn"),
     revealTileCount: sessionStorage.get("revealTileCount"),
+    steal: sessionStorage.get("steal"),
     index: sessionStorage.get("index")    // player's index in the player's list (on server side)
   });
 
@@ -680,6 +681,7 @@ socket.on('display tiles', function(data){
   }
   // update player Tiles
   Tiles = data.tiles;
+  sessionStorage.setItem("tiles", data.tiles);
 });
 
 /**
@@ -690,6 +692,7 @@ socket.on('display tiles', function(data){
 socket.on('display revealed', function(data){
   var element;
   var clas = "";
+  sessionStorage.set("revealed", data.tiles);
   if(data.message == "win"){
     console.log("winner id: " + data.pID);
     Winner = [data.pname, data.pID];
@@ -879,6 +882,17 @@ socket.on('to finish', function(){
   document.getElementById('erev').innerHTML = "";
   document.getElementById('wrev').innerHTML = "";
   document.getElementById('nrev').innerHTML = "";
+});
+
+
+/**
+  * @desc set sessionStorage
+  * @param data - {string: key}, {string: value}
+ */
+socket.on('set sessionStorage', function(data){
+  sessionStorage.setItem(key, value);
+  console.log('set sessionStorage');
+  console.log(sessionStorage.getItem(key));
 });
 
 
