@@ -403,3 +403,10 @@ game.js states:
 - four
   - when you reveal four, you have an extra chance to draw
   - so, enable draw
+  
+  
+On refresh:
+- set names at start
+- set tiles at 'display tiles'
+- set revealed at 'display revealed'
+- DO I WANT TO KEEP EVERYTHING CONSISTENT BY USING 'SET SESSIONSTORAGE' OR DOES IT NOT MATTER?
